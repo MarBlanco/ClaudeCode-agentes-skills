@@ -253,7 +253,3 @@ No afirmar que una revisión independiente ocurrió si no se ejecutó realmente.
 ## 11. Principio operativo
 
 El objetivo no es utilizar la mayor cantidad de herramientas, sino seleccionar las capacidades correctas para resolver cada tarea con el menor trabajo necesario y evidencia suficiente.
-
-Priorizar, en este orden:
-
-1. Corre
