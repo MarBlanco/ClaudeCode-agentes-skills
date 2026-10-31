@@ -8,15 +8,16 @@
 #   -CodebaseMemory Update   igual que Install pero reemplaza el binario por la ultima release.
 #   -CodebaseMemory Remove   quita el registro MCP y el binario. Los indices se conservan.
 #
-# Distribucion de Skills y agentes (.claude/skills, .claude/agents) del repo:
-#   -SyncUser                copia a ~/.claude (disponibles en todos los proyectos).
-#   -SyncProject <ruta,...>  copia a <ruta>/.claude de cada proyecto indicado.
-#   -DryRun                  solo informa que haria. No escribe nada.
-# Solo toca las Skills/agentes que existen en este repo; no borra nada ajeno. Si un destino
-# difiere (ignorando fin de linea), guarda antes una copia en ~/.claude/backups/harness-sync-<fecha>.
+# Plugins del harness:
+#   -Marketplace             registra este repo como marketplace "harness" e instala/actualiza
+#                            harness-core (scope user). Los modulos web/payments se activan por
+#                            proyecto con scripts/sync-project.ps1.
+#   -DryRun                  con -Marketplace, solo informa que haria.
+#   -SyncUser/-SyncProject   obsoletos: avisan y no copian nada.
 param(
     [ValidateSet('None', 'Status', 'Install', 'Update', 'Remove')]
     [string]$CodebaseMemory = 'None',
+    [switch]$Marketplace,
     [switch]$SyncUser,
     [string[]]$SyncProject = @(),
     [switch]$DryRun
@@ -154,65 +155,31 @@ switch ($CodebaseMemory) {
 }
 
 # ---------------------------------------------------------------------------
-# Distribucion de Skills y agentes
+# Marketplace de plugins del harness (harness-core, harness-web, harness-payments)
 # ---------------------------------------------------------------------------
-$script:backupRoot = $null
-
-function Test-SameContent([string]$a, [string]$b) {
-    $ba = [IO.File]::ReadAllBytes($a); $bb = [IO.File]::ReadAllBytes($b)
-    if (([Array]::IndexOf($ba, [byte]0) -ge 0) -or ([Array]::IndexOf($bb, [byte]0) -ge 0)) {
-        return ((Get-FileHash -LiteralPath $a).Hash -eq (Get-FileHash -LiteralPath $b).Hash)
-    }
-    try {
-        $strict = New-Object Text.UTF8Encoding($false, $true)
-        $ta = $strict.GetString($ba) -replace "`r`n", "`n"
-        $tb = $strict.GetString($bb) -replace "`r`n", "`n"
-        return ($ta -ceq $tb)
-    } catch {
-        return ((Get-FileHash -LiteralPath $a).Hash -eq (Get-FileHash -LiteralPath $b).Hash)
-    }
+if ($SyncUser -or $SyncProject.Count -gt 0) {
+    Write-Warning "-SyncUser y -SyncProject ya no copian Skills: se distribuyen como plugins."
+    Write-Warning "Usar -Marketplace (usuario) y scripts/sync-project.ps1 (proyectos). No se copio nada."
 }
 
-function Sync-Capabilities([string]$destClaude, [string]$label) {
-    $srcClaude = Join-Path $repoRoot '.claude'
-    $new = 0; $upd = 0; $same = 0
-    foreach ($kind in 'skills', 'agents') {
-        $srcKind = Join-Path $srcClaude $kind
-        if (-not (Test-Path -LiteralPath $srcKind)) { continue }
-        foreach ($f in Get-ChildItem -LiteralPath $srcKind -Recurse -File) {
-            $rel = $f.FullName.Substring($srcClaude.Length).TrimStart('\')
-            $dst = Join-Path $destClaude $rel
-            if (-not (Test-Path -LiteralPath $dst -PathType Leaf)) {
-                $new++
-                if (-not $DryRun) {
-                    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $dst) | Out-Null
-                    Copy-Item -LiteralPath $f.FullName -Destination $dst
-                }
-            } elseif (Test-SameContent $f.FullName $dst) {
-                $same++
-            } else {
-                $upd++
-                if (-not $DryRun) {
-                    if (-not $script:backupRoot) {
-                        $script:backupRoot = Join-Path $targetDir ('backups\harness-sync-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
-                    }
-                    $sha = [Security.Cryptography.SHA256]::Create()
-                    $tag = ([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($destClaude.ToLower()))) -replace '-', '').Substring(0, 8)
-                    $bk = Join-Path (Join-Path $script:backupRoot "$label-$tag") $rel
-                    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $bk) | Out-Null
-                    Copy-Item -LiteralPath $dst -Destination $bk
-                    Copy-Item -LiteralPath $f.FullName -Destination $dst -Force
-                }
-            }
-        }
+if ($Marketplace) {
+    if (-not (Get-Command claude -ErrorAction SilentlyContinue)) { Write-Error "FALLO: no se encontro claude en PATH"; exit 1 }
+    $known = & claude plugin marketplace list 2>&1 | Out-String
+    # Línea "  ❯ harness" (el glifo puede llegar mal decodificado según la consola)
+    if ($known -match '(?m)^\s*\S*\s+harness\s*\r?$') {
+        Write-Host "Marketplace harness ya registrado: actualizando..."
+        if (-not $DryRun) { & claude plugin marketplace update harness; if ($LASTEXITCODE -ne 0) { throw "FALLO: marketplace update" } }
+    } else {
+        Write-Host "Registrando marketplace harness: $repoRoot"
+        if (-not $DryRun) { & claude plugin marketplace add $repoRoot; if ($LASTEXITCODE -ne 0) { throw "FALLO: marketplace add" } }
     }
-    $mode = if ($DryRun) { '[DryRun] ' } else { '' }
-    Write-Host ("{0}{1}: nuevos={2} actualizados={3} iguales={4}" -f $mode, $label, $new, $upd, $same)
+    $installed = & claude plugin list 2>&1 | Out-String
+    if ($installed -match "harness-core@harness") {
+        Write-Host "harness-core ya instalado (scope user): actualizando..."
+        if (-not $DryRun) { & claude plugin update harness-core@harness --scope user }
+    } else {
+        Write-Host "Instalando harness-core (scope user)..."
+        if (-not $DryRun) { & claude plugin install harness-core@harness --scope user; if ($LASTEXITCODE -ne 0) { throw "FALLO: plugin install" } }
+    }
+    Write-Host "harness-web y harness-payments se activan por proyecto con scripts/sync-project.ps1. Reiniciar Claude Code."
 }
-
-if ($SyncUser) { Sync-Capabilities $targetDir 'usuario' }
-foreach ($p in $SyncProject) {
-    if (-not (Test-Path -LiteralPath $p -PathType Container)) { Write-Error "FALLO: no existe el proyecto $p"; exit 1 }
-    Sync-Capabilities (Join-Path (Resolve-Path -LiteralPath $p).Path '.claude') (Split-Path -Leaf (Resolve-Path -LiteralPath $p).Path)
-}
-if ($script:backupRoot) { Write-Host "Copias previas en: $script:backupRoot" }
