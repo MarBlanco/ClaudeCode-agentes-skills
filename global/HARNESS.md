@@ -40,6 +40,17 @@ Una tarea está terminada solo cuando: el objetivo está implementado; los cambi
 
 Usarlos solo cuando sean relevantes para la tarea, nunca por estar disponibles. Antes de incorporar o crear una capacidad nueva: revisar las existentes, preferir una solución oficial, luego una externa madura, comparar alternativas y crear una propia solo si no hay alternativa adecuada y la necesidad está justificada. Calidad y utilidad por encima de cantidad.
 
+## Codebase Memory (MCP opcional)
+
+Grafo de código indexado (`codebase-memory-mcp`). Complementa el análisis; no sustituye la lectura del código ni las pruebas.
+
+- Usarlo solo si sus herramientas están disponibles en la sesión (no basta con que el servidor esté configurado). Si no, seguir con lectura directa y búsqueda tradicional, e informarlo.
+- Útil en repos medianos o grandes para: explorar estructura, localizar símbolos, trazar llamadas y dependencias, y estimar el impacto de un cambio antes de editar.
+- Para archivos concretos, repos pequeños, texto literal o configuración, leer o buscar directamente.
+- Antes de confiar en una respuesta, comprobar que el proyecto esté indexado y el índice vigente. Si está ausente o desactualizado, reindexar o recurrir a la búsqueda tradicional. Si una consulta falla, no reintentar en bucle: pasar a lectura directa.
+- Antes de editar, abrir y leer los archivos que el grafo señale. Sus resultados son pistas, no prueba de que un cambio funcione: verificar con tests, build o ejecución.
+- Nunca imponerlo a un proyecto: se activa por proyecto y respeta su configuración MCP.
+
 ## Código
 
 Priorizar claridad, mantenibilidad, modularidad, reutilización, tipado, seguridad y performance. No refactorizar código que funciona si no es necesario para el objetivo. No modificar la arquitectura sin razón técnica clara.

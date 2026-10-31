@@ -21,7 +21,7 @@ playwright-cli press Enter
 playwright-cli screenshot
 # close the browser
 playwright-cli close
-```
+```i
 
 ## Commands
 

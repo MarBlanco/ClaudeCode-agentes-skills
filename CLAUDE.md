@@ -16,7 +16,7 @@ No contiene código de producto ni depende de proyectos consumidores concretos.
 - `CLAUDE.md`: reglas de este repositorio. Importa `@global/HARNESS.md`.
 - `.claude/agents/`: agentes especializados compartidos.
 - `.claude/skills/`: Skills compartidas.
-- `scripts/install-harness.ps1`: instala o actualiza `HARNESS.md`.
+- `scripts/install-harness.ps1`: instala `HARNESS.md` y, con parámetros, distribuye Skills y agentes (`-SyncUser`, `-SyncProject`) y gestiona Codebase Memory (`-CodebaseMemory`). Ver README.
 - `README.md`: documentación e inventario del repositorio.
 
 ### Inventario de Skills
@@ -28,6 +28,7 @@ No contiene código de producto ni depende de proyectos consumidores concretos.
 - `harness-review`
 - `harness-work`
 - `playwright-cli`
+- `skill-creator`
 - `skill-development`
 - `systematic-debugging`
 - `vercel-composition-patterns`
@@ -96,6 +97,7 @@ Elegir según la necesidad concreta:
 | Aplicar patrones de composición React | `vercel-composition-patterns` |
 | Mejorar rendimiento de React y Next.js | `vercel-react-best-practices` |
 | Crear o mantener Skills | `skill-development` |
+| Crear una Skill con evals, medir su rendimiento u optimizar su descripción | `skill-creator` (oficial de Anthropic, commit `ca45fc4`; único cambio local: parche de seguridad en `eval-viewer/generate_review.py`, reaplicar al actualizar) |
 | Planificar una tarea compleja | `harness-plan` |
 | Coordinar implementación y verificación | `harness-work` |
 | Revisar la calidad final | `harness-review` |
@@ -157,6 +159,15 @@ Utilizar `playwright-cli` cuando se necesiten recorridos reproducibles, pruebas 
 Preferir comprobaciones automatizadas para flujos que deban repetirse.
 
 No ejecutar las mismas pruebas con varias herramientas si ninguna aporta evidencia adicional.
+
+### 5.3 Codebase Memory (opcional)
+
+Las reglas de uso están en `global/HARNESS.md` (sección "Codebase Memory"); no se repiten aquí.
+
+- Es una capacidad opcional, no una Skill ni un agente. La instala y configura `scripts/install-harness.ps1 -CodebaseMemory <Status|Install|Update|Remove>`.
+- Antes de usarlo en una tarea, comprobar que sus herramientas están disponibles en la sesión (`/mcp`) y que el proyecto está indexado; si no, informar y usar lectura directa.
+- Consultarlo en el ANALYZE de tareas no triviales sobre bases de código medianas o grandes (estructura, dependencias, impacto). En VERIFY no cuenta como evidencia.
+- El registro MCP es de scope usuario (disponible en todos los proyectos). Indexar un proyecto consumidor requiere autorización; el índice vive fuera del repo (`~/.cache/codebase-memory-mcp/`).
 
 ## 6. Contrato de ejecución
 
@@ -243,6 +254,7 @@ No afirmar que una revisión independiente ocurrió si no se ejecutó realmente.
 
 - Toda modificación de reglas globales se realiza en `global/HARNESS.md`.
 - Después de editarlo, ejecutar `scripts/install-harness.ps1`.
+- Después de cambiar una Skill o un agente, ejecutar `scripts/install-harness.ps1 -SyncUser` (y `-SyncProject` en los proyectos que mantengan copia propia). Los cambios hechos en una copia de proyecto no vuelven al central: editar siempre aquí.
 - Mantener `HARNESS.md` compacto porque se carga en las sesiones consumidoras.
 - Mantener actualizado el inventario del `README.md`.
 - Mantener agentes y Skills genéricos y reutilizables.
