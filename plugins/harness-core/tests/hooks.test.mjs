@@ -148,10 +148,11 @@ test('session-start: anuncia perfil solo si hay manifiesto', () => {
   const dir = tempRepo();
   try {
     assert.equal(hook('session-start.mjs', { cwd: dir }).stdout, '');
-    withManifest(dir, { typecheck: { command: 'tsc' } });
+    withManifest(dir, { typecheck: { command: 'npx tsc -b' } });
     const out = hook('session-start.mjs', { cwd: dir }).stdout;
     assert.match(out, /perfil test/);
-    assert.match(out, /Typecheck en Stop/);
+    assert.match(out, /Typecheck en Stop: npx tsc -b$/m);
+    assert.doesNotMatch(out, /\[object Object\]/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

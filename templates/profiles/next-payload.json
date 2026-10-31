@@ -47,9 +47,16 @@
     "G8"
   ],
   "gateCommands": {
-    "G1": "npm run type-check && npm run lint && npm run build",
+    "G1": [
+      "npm run type-check",
+      "npm run lint",
+      "npm run build"
+    ],
     "G2": "npm test --workspace=apps/web",
-    "G6": "gitleaks git --no-banner --redact -v . && osv-scanner scan source -r .",
+    "G6": [
+      "gitleaks git --no-banner --redact -v .",
+      "osv-scanner scan source -r ."
+    ],
     "G8": "npm run migrate:status --workspace=apps/web"
   },
   "quality": {

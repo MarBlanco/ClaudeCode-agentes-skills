@@ -1,16 +1,48 @@
 {
   "name": "django-react",
   "description": "Django + DRF + Celery con frontend React (CRA) y docker-compose (Sentri).",
-  "detect": { "anyPath": ["backend/manage.py", "manage.py"], "anyPackageDependsOn": ["react"] },
-  "modules": ["web"],
-  "settings": { "permissions": { "deny": ["mcp__rea"] } },
+  "detect": {
+    "anyPath": [
+      "backend/manage.py",
+      "manage.py"
+    ],
+    "anyPackageDependsOn": [
+      "react"
+    ]
+  },
+  "modules": [
+    "web"
+  ],
+  "settings": {
+    "permissions": {
+      "deny": [
+        "mcp__rea"
+      ]
+    }
+  },
   "mcpServers": {},
   "optionalMcp": {},
-  "gates": ["G1", "G2", "G3", "G4", "G5", "G6", "G8"],
+  "gates": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5",
+    "G6",
+    "G8"
+  ],
   "gateCommands": {
-    "G1": "ruff check backend && npm --prefix frontend run build",
+    "G1": [
+      "ruff check backend",
+      "npm --prefix frontend run build"
+    ],
     "G2": "cd backend && python -m pytest && cd .. && npm --prefix frontend test",
-    "G6": "gitleaks git --no-banner --redact -v . && bandit -q -r backend -c backend/pyproject.toml && pip-audit -r backend/requirements.txt && osv-scanner scan source -r .",
+    "G6": [
+      "gitleaks git --no-banner --redact -v .",
+      "bandit -q -r backend -c backend/pyproject.toml",
+      "pip-audit -r backend/requirements.txt",
+      "osv-scanner scan source -r ."
+    ],
     "G8": "cd backend && python manage.py makemigrations --check --dry-run"
   },
   "quality": {}

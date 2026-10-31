@@ -152,7 +152,7 @@ test('next-payload + payments: .mcp.json conserva servidores propios; overrides 
     const m = JSON.parse(readFileSync(join(dir, '.claude', 'harness.manifest.json'), 'utf8'));
     assert.deepEqual(m.modules, ['web', 'payments']);
     assert.equal(m.gateCommands.G2, 'npm run test:coverage --workspace=apps/web');
-    assert.equal(m.gateCommands.G1, 'npm run type-check && npm run lint && npm run build');
+    assert.deepEqual(m.gateCommands.G1, ['npm run type-check', 'npm run lint', 'npm run build']);
     // Re-sync sin --modules conserva los módulos del manifiesto
     assert.equal(Object.values(plan(dir, {}).changes).some(Boolean), false);
     // Quitar el módulo payments retira solo sus entradas gestionadas

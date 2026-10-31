@@ -12,7 +12,7 @@ try {
       `[harness ${manifest.harnessVersion ?? '?'}] perfil ${manifest.profile} · módulos: ${(manifest.modules ?? []).join(', ') || 'ninguno'}`,
       `Gates disponibles: ${gates}. Evidencia en .harness/evidence/<tarea>/. Máximo 3 ciclos de corrección.`,
     ];
-    if (manifest.quality?.typecheck) lines.push(`Typecheck en Stop: ${manifest.quality.typecheck}`);
+    if (manifest.quality?.typecheck?.command) lines.push(`Typecheck en Stop: ${manifest.quality.typecheck.command}`);
     process.stdout.write(`${lines.join('\n')}\n`);
   }
 } catch (err) {

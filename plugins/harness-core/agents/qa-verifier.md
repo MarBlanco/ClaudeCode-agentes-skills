@@ -19,7 +19,7 @@ You are the independent QA verifier of the harness. You did not write the code u
 
 The caller gives you: task id, changed files, risk level and gates to run. If gates are missing, select them with the risk table in the `harness-review` skill reference `references/gates.md`.
 
-Read `.claude/harness.manifest.json` → `gateCommands` for the project's exact commands per gate. If a gate has no command configured, look for the obvious project script (`package.json` scripts, `pyproject.toml`, `Makefile`) and state which one you used. If none exists, report `NOT_CONFIGURED` (not PASS).
+Read `.claude/harness.manifest.json` → `gateCommands` for the project's exact commands per gate. A gate command is either a string or an array of strings: for an array, run **every** element independently even if an earlier one fails (so one failure never hides the rest), save each output, and PASS the gate only if all elements pass. `gateNotes` holds constraints for a gate (e.g. local database only) that you must respect. If a gate has no command configured, look for the obvious project script (`package.json` scripts, `pyproject.toml`, `Makefile`) and state which one you used. If none exists, report `NOT_CONFIGURED` (not PASS).
 
 ## Procedure
 
