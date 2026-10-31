@@ -1,5 +1,12 @@
 # Changelog
 
+## harness-core v0.9.3 — 2026-10-31
+
+### Seguridad
+- Hooks de calidad: los comandos del manifiesto (archivo del repo) solo se ejecutan si su hash fue aprobado por el usuario en `~/.claude/harness/approved-commands.json`; SyncProject registra la aprobación en cada `--apply`. Evita ejecución de código al abrir un repo ajeno o con un manifiesto alterado.
+- Formato: las rutas con metacaracteres de shell no se pasan al shell.
+- `qa-verifier`: revisa los `gateCommands` antes de ejecutarlos (configuración no confiable).
+
 ## harness v0.9.2 — 2026-10-31 (rama `feat/harness-v2`)
 
 Primera versión del harness por plugins. Etiqueta previa al cambio: `pre-harness-v2`.

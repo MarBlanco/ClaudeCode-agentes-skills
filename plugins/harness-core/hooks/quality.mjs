@@ -7,7 +7,7 @@ import { spawnSync, execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
-import { loadManifest, readStdinJson } from './lib.mjs';
+import { isApproved, isShellSafePath, loadManifest, readStdinJson } from './lib.mjs';
 
 const mode = process.argv[2];
 
@@ -69,6 +69,10 @@ function stop(input, cfg, cwd) {
 function format(input, rules, cwd) {
   const file = input.tool_input?.file_path;
   if (!file || !existsSync(file)) return;
+  if (!isShellSafePath(file)) {
+    process.stderr.write(`harness format: ruta con caracteres no seguros para el shell, no se formatea: ${JSON.stringify(file)}\n`);
+    return;
+  }
   const rule = rules.find((r) => (r.extensions ?? []).includes(extname(file)));
   if (!rule) return;
   const { ok, output } = run(`${rule.command} "${file}"`, cwd, rule.timeoutSec ?? 30);
@@ -79,7 +83,11 @@ try {
   const input = await readStdinJson();
   const cwd = input.cwd || process.cwd();
   const quality = loadManifest(cwd)?.quality;
-  if (mode === 'stop' && quality?.typecheck?.command) stop(input, quality.typecheck, cwd);
+  const hasCommands = quality?.typecheck?.command || quality?.format?.length;
+  if (hasCommands && !isApproved(cwd, quality)) {
+    // Comandos del repo sin aprobación del usuario (clon ajeno o manifiesto editado): no se ejecutan.
+    process.stderr.write('harness quality: comandos del manifiesto no aprobados; no se ejecutan. Aprobar con: node scripts/sync-project.mjs --project <ruta> --apply\n');
+  } else if (mode === 'stop' && quality?.typecheck?.command) stop(input, quality.typecheck, cwd);
   if (mode === 'format' && Array.isArray(quality?.format)) format(input, quality.format, cwd);
 } catch (err) {
   process.stderr.write(`harness quality (${mode}): ${err.message}\n`);

@@ -9,6 +9,9 @@ import { fileURLToPath } from 'node:url';
 import { evaluate, isSecretPath, secretInCommand } from '../hooks/guard.mjs';
 
 const hooks = join(dirname(fileURLToPath(import.meta.url)), '..', 'hooks');
+// Aprobaciones aisladas: nunca tocar ~/.claude real (los hijos heredan el entorno)
+process.env.HARNESS_APPROVALS_FILE = join(mkdtempSync(join(tmpdir(), 'harness-approvals-')), 'approved.json');
+const { approveCommands } = await import('../hooks/lib.mjs');
 
 function hook(script, input, ...args) {
   const r = spawnSync(process.execPath, [join(hooks, script), ...args], { input: JSON.stringify(input), encoding: 'utf8' });
@@ -139,10 +142,46 @@ test('guard: comando largo se evalúa rápido (sin backtracking)', () => {
   assert.ok(Date.now() - t < 1000, `tardó ${Date.now() - t}ms`);
 });
 
-function withManifest(dir, quality) {
+function withManifest(dir, quality, { approve = true } = {}) {
   mkdirSync(join(dir, '.claude'), { recursive: true });
   writeFileSync(join(dir, '.claude', 'harness.manifest.json'), JSON.stringify({ harnessVersion: '0.1.0', profile: 'test', modules: ['web'], quality }));
+  if (approve) approveCommands(dir, quality);
 }
+
+test('quality: comandos del manifiesto sin aprobar o alterados no se ejecutan', () => {
+  const dir = tempRepo();
+  try {
+    const marker = join(dir, 'pwned.txt');
+    const evil = { typecheck: { command: `node -e "require('fs').writeFileSync('pwned.txt','x')"` } };
+    writeFileSync(join(dir, 'a.ts'), 'export const a = 2;\n');
+    withManifest(dir, evil, { approve: false });
+    const r = hook('quality.mjs', { cwd: dir }, 'stop');
+    assert.ok(!existsSync(marker), 'ejecutó un comando no aprobado');
+    assert.match(r.stderr, /no aprobados/);
+    assert.match(hook('session-start.mjs', { cwd: dir }).stdout, /NO aprobado/);
+    // Aprobado un comando inocuo y luego el manifiesto se altera: tampoco corre
+    withManifest(dir, { typecheck: { command: 'node -e "process.exit(0)"' } });
+    writeFileSync(join(dir, '.claude', 'harness.manifest.json'), JSON.stringify({ quality: evil }));
+    hook('quality.mjs', { cwd: dir }, 'stop');
+    assert.ok(!existsSync(marker), 'ejecutó un comando alterado tras la aprobación');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('quality format: rutas con metacaracteres de shell no se pasan al shell', () => {
+  const dir = tempRepo();
+  try {
+    const bad = join(dir, 'x$(touch pwned).ts');
+    writeFileSync(bad, '');
+    withManifest(dir, { format: [{ extensions: ['.ts'], command: 'node -e "0"' }] });
+    const r = hook('quality.mjs', { cwd: dir, tool_input: { file_path: bad } }, 'format');
+    assert.match(r.stderr, /no seguros/);
+    assert.ok(!existsSync(join(dir, 'pwned')));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
 
 test('session-start: anuncia perfil solo si hay manifiesto', () => {
   const dir = tempRepo();

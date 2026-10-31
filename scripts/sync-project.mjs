@@ -17,6 +17,7 @@ import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { approveCommands } from '../plugins/harness-core/hooks/lib.mjs';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PROFILES = join(REPO, 'templates', 'profiles');
@@ -420,6 +421,9 @@ export function apply(planned, { now = new Date() } = {}) {
   }
   const p = paths(planned.project);
   const c = planned.changes;
+  // El usuario ejecuta el sync: eso aprueba los comandos de calidad del manifiesto
+  // (los hooks de harness-core no ejecutan comandos sin esta aprobación, guardada fuera del repo).
+  approveCommands(planned.project, planned.manifest.quality);
   if (!Object.values(c).some(Boolean)) return { backup: null, written: [] };
 
   // Backup de todo lo que se va a tocar (y registro de qué no existía)

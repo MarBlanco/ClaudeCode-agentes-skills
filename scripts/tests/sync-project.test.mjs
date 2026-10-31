@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
-import { apply, computePlan, listBackups, plan, rollback, updateGitignore } from '../sync-project.mjs';
+process.env.HARNESS_APPROVALS_FILE = join(mkdtempSync(join(tmpdir(), 'harness-approvals-')), 'approved.json');
+const { apply, computePlan, listBackups, plan, rollback, updateGitignore } = await import('../sync-project.mjs');
 
 function snapshot(dir) {
   const out = {};

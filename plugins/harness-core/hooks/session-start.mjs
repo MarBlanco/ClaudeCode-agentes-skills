@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // harness-core · SessionStart: anuncia perfil, módulos y gates del proyecto.
 // Solo lee archivos locales; no hace red ni modifica nada.
-import { loadManifest, readStdinJson } from './lib.mjs';
+import { isApproved, loadManifest, readStdinJson } from './lib.mjs';
 
 try {
   const input = await readStdinJson();
@@ -12,7 +12,10 @@ try {
       `[harness ${manifest.harnessVersion ?? '?'}] perfil ${manifest.profile} · módulos: ${(manifest.modules ?? []).join(', ') || 'ninguno'}`,
       `Gates disponibles: ${gates}. Evidencia en .harness/evidence/<tarea>/. Máximo 3 ciclos de corrección.`,
     ];
-    if (manifest.quality?.typecheck?.command) lines.push(`Typecheck en Stop: ${manifest.quality.typecheck.command}`);
+    if (manifest.quality?.typecheck?.command) {
+      const approved = isApproved(input.cwd || process.cwd(), manifest.quality);
+      lines.push(`Typecheck en Stop: ${manifest.quality.typecheck.command}${approved ? '' : ' (NO aprobado: no se ejecuta)'}`);
+    }
     process.stdout.write(`${lines.join('\n')}\n`);
   }
 } catch (err) {
