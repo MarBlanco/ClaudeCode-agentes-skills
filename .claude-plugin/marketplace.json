@@ -1,0 +1,26 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "harness",
+  "description": "Harness profesional de ingeniería web: núcleo reutilizable y módulos de dominio que cada proyecto activa según su perfil.",
+  "owner": { "name": "Martin Blanco" },
+  "plugins": [
+    {
+      "name": "harness-core",
+      "description": "Método, agentes independientes, gates de calidad y hooks de protección.",
+      "source": "./plugins/harness-core",
+      "category": "development"
+    },
+    {
+      "name": "harness-web",
+      "description": "Skills y plantillas de QA para proyectos web (React, Next.js, Vite, Django + React).",
+      "source": "./plugins/harness-web",
+      "category": "development"
+    },
+    {
+      "name": "harness-payments",
+      "description": "Payments Core agnóstico con especialización Mercado Pago.",
+      "source": "./plugins/harness-payments",
+      "category": "development"
+    }
+  ]
+}

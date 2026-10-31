@@ -1,0 +1,7 @@
+{
+  "name": "harness-web",
+  "version": "0.9.0",
+  "description": "Módulo web del harness: diseño frontend, design-loop, guías de interfaz, buenas prácticas React/Next de Vercel, Playwright CLI, Chrome DevTools y plantillas de QA web (visual, accesibilidad, performance).",
+  "author": { "name": "Martin Blanco" },
+  "keywords": ["harness", "web", "react", "nextjs", "playwright", "accessibility"]
+}

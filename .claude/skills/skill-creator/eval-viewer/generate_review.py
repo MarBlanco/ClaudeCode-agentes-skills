@@ -338,7 +338,30 @@ class ReviewHandler(BaseHTTPRequestHandler):
         self.benchmark_path = benchmark_path
         super().__init__(*args, **kwargs)
 
+    # LOCAL SECURITY PATCH (not upstream; reference: anthropics/skills ca45fc4).
+    # Only serve requests addressed to this local server (blocks DNS rebinding)
+    # and only accept JSON POSTs from its own origin (blocks cross-site writes:
+    # a cross-origin JSON POST needs a CORS preflight, which is never answered).
+    def _local_origins(self) -> set[str]:
+        port = self.server.server_address[1]
+        return {f"localhost:{port}", f"127.0.0.1:{port}"}
+
+    def _is_trusted(self, require_json: bool = False) -> bool:
+        if self.headers.get("Host", "") not in self._local_origins():
+            return False
+        origin = self.headers.get("Origin")
+        if origin is not None and origin.removeprefix("http://") not in self._local_origins():
+            return False
+        if require_json:
+            ctype = self.headers.get("Content-Type", "").split(";")[0].strip().lower()
+            if ctype != "application/json":
+                return False
+        return True
+
     def do_GET(self) -> None:
+        if not self._is_trusted():
+            self.send_error(403)
+            return
         if self.path == "/" or self.path == "/index.html":
             # Regenerate HTML on each request (re-scans workspace for new outputs)
             runs = find_runs(self.workspace)
@@ -368,6 +391,9 @@ class ReviewHandler(BaseHTTPRequestHandler):
             self.send_error(404)
 
     def do_POST(self) -> None:
+        if not self._is_trusted(require_json=True):
+            self.send_error(403)
+            return
         if self.path == "/api/feedback":
             length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(length)
