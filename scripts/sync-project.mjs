@@ -15,7 +15,7 @@
 // Overrides del proyecto (suyos, nunca escritos por el harness): .claude/harness.project.json
 import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative, resolve, sep } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -226,6 +226,17 @@ export function updateGitignore(text) {
 
 const SECURITY_WORKFLOW = '.github/workflows/harness-security.yml';
 const DEPENDABOT = '.github/dependabot.yml';
+// Únicas rutas que el harness puede escribir o borrar como archivo completo. El manifiesto
+// es un archivo del repo (editable por PR): nunca se confía en rutas que no estén aquí.
+const MANAGED_FILE_PATHS = new Set([SECURITY_WORKFLOW, DEPENDABOT]);
+
+/** Ruta relativa segura dentro del proyecto (sin absolutas, "..", ni UNC). */
+export function isSafeRel(project, rel) {
+  if (typeof rel !== 'string' || !rel || isAbsolute(rel) || /^[\\/]{2}/.test(rel)) return false;
+  if (rel.split(/[\\/]/).includes('..')) return false;
+  const abs = resolve(project, rel);
+  return abs.startsWith(resolve(project) + sep);
+}
 // Hash independiente del fin de línea: git en Windows (autocrlf) reescribe LF ↔ CRLF.
 const sha256 = (text) => createHash('sha256').update(text.replace(/\r\n/g, '\n')).digest('hex');
 
@@ -305,6 +316,10 @@ export function planFiles(project, desired, managed = {}) {
   }
   for (const [rel, hash] of Object.entries(managed)) {
     if (Object.hasOwn(desired, rel)) continue;
+    if (!MANAGED_FILE_PATHS.has(rel) || !isSafeRel(project, rel)) {
+      plan.conflict.push({ key: rel, reason: 'ruta gestionada no permitida en el manifiesto (se ignora)' });
+      continue;
+    }
     const abs = join(project, rel);
     if (!existsSync(abs)) continue;
     if (sha256(readFileSync(abs, 'utf8')) === hash) plan.remove.push(rel);
@@ -477,6 +492,8 @@ export function rollback(project, ts) {
   if (!target || !all.includes(target)) throw new Error(`Backup inexistente: ${ts ?? '(ninguno)'}. Disponibles: ${all.join(', ') || 'ninguno'}`);
   const bdir = join(p.backups, target);
   const meta = JSON.parse(readFileSync(join(bdir, 'backup.json'), 'utf8'));
+  const unsafe = [...(meta.retired ?? []), ...Object.keys(meta.files ?? {})].filter((rel) => !isSafeRel(project, rel));
+  if (unsafe.length) throw new Error(`backup.json contiene rutas fuera del proyecto; rollback abortado: ${unsafe.join(', ')}`);
   const files = { settings: p.settings, mcp: p.mcp, gitignore: p.gitignore, manifest: p.manifest };
   const restored = [];
   for (const [k, f] of Object.entries(files)) {

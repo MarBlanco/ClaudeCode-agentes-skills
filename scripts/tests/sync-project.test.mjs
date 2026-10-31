@@ -211,3 +211,34 @@ test('archivos CI: CRLF no es conflicto; borrado a mano sí', () => {
     assert.deepEqual(deleted.conflicts.map((c) => `${c.key}: ${c.reason}`), ['.github/dependabot.yml: archivo gestionado borrado a mano']);
   } finally { cleanup(dir); }
 });
+
+test('seguridad: el manifiesto no puede hacer borrar rutas ajenas; rollback rechaza rutas fuera del proyecto', async () => {
+  const { isSafeRel } = await import('../sync-project.mjs');
+  const dir = viteProject();
+  const outside = mkdtempSync(join(tmpdir(), 'victim-'));
+  try {
+    assert.equal(isSafeRel(dir, '.github/dependabot.yml'), true);
+    for (const bad of ['../x', String.raw`..\x`, 'a/../../x', String.raw`C:\Windows\x`, '/etc/x', String.raw`\\srv\share\x`, '']) assert.equal(isSafeRel(dir, bad), false, bad);
+
+    apply(plan(dir, { profile: 'vite-supabase' }));
+    const victim = join(outside, 'importante.txt');
+    writeFileSync(victim, 'no borrar');
+    const mf = join(dir, '.claude', 'harness.manifest.json');
+    const m = JSON.parse(readFileSync(mf, 'utf8'));
+    const { createHash } = await import('node:crypto');
+    m.managedFiles[relative(dir, victim)] = createHash('sha256').update('no borrar').digest('hex');
+    writeFileSync(mf, JSON.stringify(m));
+    const pl = plan(dir, {});
+    assert.ok(pl.conflicts.some((c) => /no permitida/.test(c.reason)));
+    assert.throws(() => apply(pl), /Conflictos/);
+    assert.equal(readFileSync(victim, 'utf8'), 'no borrar');
+
+    const ts = listBackups(dir).at(-1);
+    const bj = join(dir, '.claude', '.harness-backup', ts, 'backup.json');
+    const meta = JSON.parse(readFileSync(bj, 'utf8'));
+    meta.files[relative(dir, victim)] = false;
+    writeFileSync(bj, JSON.stringify(meta));
+    assert.throws(() => rollback(dir, ts), /fuera del proyecto/);
+    assert.equal(readFileSync(victim, 'utf8'), 'no borrar');
+  } finally { cleanup(dir); cleanup(outside); }
+});

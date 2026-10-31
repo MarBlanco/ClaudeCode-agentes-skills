@@ -14,30 +14,23 @@ No contiene código de producto ni depende de proyectos consumidores concretos.
 
 - `global/HARNESS.md`: reglas globales reutilizables. Se instala como `~/.claude/HARNESS.md`.
 - `CLAUDE.md`: reglas de este repositorio. Importa `@global/HARNESS.md`.
-- `.claude/agents/`: agentes especializados compartidos.
-- `.claude/skills/`: Skills compartidas.
-- `scripts/install-harness.ps1`: instala `HARNESS.md` y, con parámetros, distribuye Skills y agentes (`-SyncUser`, `-SyncProject`) y gestiona Codebase Memory (`-CodebaseMemory`). Ver README.
-- `README.md`: documentación e inventario del repositorio.
+- `.claude-plugin/marketplace.json`: catálogo del marketplace privado `harness`.
+- `plugins/harness-core|harness-web|harness-payments/`: plugins (skills, agentes, hooks, tests).
+- `.claude/skills/`: Skills de mantenimiento del propio repo (`skill-creator`, `skill-development`); no se distribuyen.
+- `templates/profiles/`: perfiles de stack y módulos. `templates/ci/`: archivos de CI gestionados.
+- `scripts/`: `install-harness.ps1` (HARNESS.md, `-Marketplace`, `-CodebaseMemory`), `sync-project.mjs|.ps1` (SyncProject v2), `harness-update-check.mjs`, `install-qa-tools.ps1`, `check-skills.mjs` y sus tests.
+- `harness.lock.json`: inventario versionado de todos los componentes.
+- `docs/DECISIONS.md`, `CHANGELOG.md`, `README.md`: decisiones, historial y documentación.
 
-### Inventario de Skills
+### Inventario
 
-- `chrome-devtools`
-- `design-loop`
-- `frontend-design`
-- `harness-plan`
-- `harness-review`
-- `harness-work`
-- `playwright-cli`
-- `skill-creator`
-- `skill-development`
-- `systematic-debugging`
-- `vercel-composition-patterns`
-- `vercel-react-best-practices`
-- `web-design-guidelines`
+| Plugin | Skills | Agentes |
+|---|---|---|
+| `harness-core` (usuario) | `harness-plan`, `harness-work`, `harness-review` (+ `references/gates.md`), `systematic-debugging` | `code-reviewer` (read-only), `qa-verifier` (sin edición) |
+| `harness-web` (por proyecto) | `frontend-design`, `design-loop`, `web-design-guidelines`, `vercel-react-best-practices`, `vercel-composition-patterns`, `playwright-cli`, `chrome-devtools`, `web-qa` | — |
+| `harness-payments` (por proyecto) | `payments-core`, `payments-review` | `payments-engineer` |
 
-### Agentes compartidos
-
-- `code-reviewer`: revisión independiente de código, de solo lectura.
+En sesión aparecen con prefijo de plugin (`harness-core:harness-work`). Hooks de `harness-core`: guard de secretos/lockfiles/migraciones/operaciones destructivas, anuncio de perfil, typecheck en Stop y formato (según el manifiesto del proyecto).
 
 Este inventario describe las capacidades esperadas del repositorio. Antes de utilizarlas, comprobar que la Skill o el agente correspondiente esté disponible en el contexto actual.
 
@@ -97,10 +90,15 @@ Elegir según la necesidad concreta:
 | Aplicar patrones de composición React | `vercel-composition-patterns` |
 | Mejorar rendimiento de React y Next.js | `vercel-react-best-practices` |
 | Crear o mantener Skills | `skill-development` |
-| Crear una Skill con evals, medir su rendimiento u optimizar su descripción | `skill-creator` (oficial de Anthropic, commit `ca45fc4`; único cambio local: parche de seguridad en `eval-viewer/generate_review.py`, reaplicar al actualizar) |
+| Crear una Skill con evals, medir su rendimiento u optimizar su descripción | `skill-creator` (oficial de Anthropic, commit `ca45fc4`; cambios locales: dos parches de seguridad en `eval-viewer/generate_review.py` — escape del JSON embebido y validación Host/Origin/Content-Type —, reaplicar al actualizar) |
 | Planificar una tarea compleja | `harness-plan` |
 | Coordinar implementación y verificación | `harness-work` |
+| Verificar con gates G1–G9 y evidencia | agente `qa-verifier` |
 | Revisar la calidad final | `harness-review` |
+| Preparar gates web (E2E, visual, a11y, performance) | `web-qa` |
+| Diseñar o cambiar pagos | `payments-core` + agente `payments-engineer` |
+| Revisar pagos (invariantes y matriz G9) | `payments-review` |
+| Integración específica de Mercado Pago | plugin oficial `mercadopago` (`mp-integration-expert`) |
 
 Esta tabla es una guía de selección, no una orden de activar automáticamente cada Skill.
 
@@ -110,7 +108,7 @@ Cuando una tarea abarque varias áreas, combinar las Skills necesarias sin repet
 
 Utilizar `harness-review` como control de calidad para tareas no triviales.
 
-Invocar `.claude/agents/code-reviewer` cuando corresponda una revisión independiente del código.
+Invocar el agente `code-reviewer` (plugin `harness-core`) cuando corresponda una revisión independiente del código, y `qa-verifier` para la verificación ejecutable con evidencia.
 
 El agente debe respetar su alcance de solo lectura: no implementar correcciones ni modificar archivos durante la revisión.
 
@@ -246,7 +244,7 @@ No afirmar que una revisión independiente ocurrió si no se ejecutó realmente.
 - No ejecutar operaciones destructivas sin autorización cuando esta sea necesaria.
 - No exponer secretos, credenciales ni variables sensibles.
 - No modificar configuraciones globales, permisos o integraciones fuera del alcance autorizado.
-- No realizar commits ni pushes sin autorización explícita.
+- Commits locales de checkpoint permitidos solo en ramas de trabajo. Nunca commits directos a `main`, push automático ni force push (el guard de `harness-core` lo hace cumplir). El push siempre requiere confirmación del usuario.
 - No instalar dependencias, plugins, agentes o Skills sin una necesidad justificada.
 - Ante incertidumbre con impacto relevante, detener la acción de riesgo y explicar el motivo.
 
@@ -254,9 +252,10 @@ No afirmar que una revisión independiente ocurrió si no se ejecutó realmente.
 
 - Toda modificación de reglas globales se realiza en `global/HARNESS.md`.
 - Después de editarlo, ejecutar `scripts/install-harness.ps1`.
-- Después de cambiar una Skill o un agente, ejecutar `scripts/install-harness.ps1 -SyncUser` (y `-SyncProject` en los proyectos que mantengan copia propia). Los cambios hechos en una copia de proyecto no vuelven al central: editar siempre aquí.
+- Después de cambiar un plugin: subir su `version` en `plugin.json`, `npm test`, `npm run check:skills`, `npm run validate`, actualizar `harness.lock.json` y ejecutar `scripts/install-harness.ps1 -Marketplace` (o `claude plugin marketplace update harness` + `claude plugin update <plugin>@harness`).
+- Después de cambiar un perfil o SyncProject: `node scripts/sync-project.mjs --project <ruta>` (dry-run) en cada proyecto y luego `--apply`.
 - Mantener `HARNESS.md` compacto porque se carga en las sesiones consumidoras.
-- Mantener actualizado el inventario del `README.md`.
+- Mantener actualizados el inventario (`README.md`, `harness.lock.json`), `CHANGELOG.md` y `docs/DECISIONS.md`.
 - Mantener agentes y Skills genéricos y reutilizables.
 - No agregar capacidades duplicadas sin demostrar su necesidad.
 - Antes de cambiar la arquitectura, comprobar el estado actual y justificar la modificación.

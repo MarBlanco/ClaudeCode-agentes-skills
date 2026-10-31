@@ -59,6 +59,8 @@ Priorizar claridad, mantenibilidad, modularidad, reutilización, tipado, segurid
 
 Antes de cambiar arquitectura, base de datos, autenticación, seguridad, infraestructura, dependencias principales o configuración de producción, analizar impacto, dependencias, compatibilidad, efectos secundarios y estrategia de reversión. Ejecutarlos de forma controlada y verificarlos después. No exponer secretos.
 
+Git: trabajar en ramas de tarea. Commits locales de checkpoint permitidos solo en ramas de trabajo; nunca commits directos a `main`/`master`, push automático ni force push. Producción, datos reales, pagos reales y gastos externos requieren autorización explícita del usuario.
+
 ## Interfaces y experiencia visual
 
 - Respetar el diseño y las convenciones existentes.
