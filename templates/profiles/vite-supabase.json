@@ -1,0 +1,62 @@
+{
+  "name": "vite-supabase",
+  "description": "React + Vite + Supabase (Campito).",
+  "detect": {
+    "anyPackageDependsOn": [
+      "vite"
+    ],
+    "anyPath": [
+      "supabase"
+    ]
+  },
+  "modules": [
+    "web"
+  ],
+  "settings": {
+    "permissions": {
+      "deny": [
+        "mcp__rea"
+      ]
+    }
+  },
+  "mcpServers": {},
+  "optionalMcp": {
+    "supabase": {
+      "why": "Advisors, esquema y logs en solo lectura (G8).",
+      "requires": "Autorización del usuario: conecta una cuenta real vía OAuth.",
+      "config": {
+        "type": "http",
+        "url": "https://mcp.supabase.com/mcp?project_ref=<PROJECT_REF>&read_only=true&features=database,docs,debugging"
+      }
+    }
+  },
+  "gates": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5",
+    "G6",
+    "G7",
+    "G8"
+  ],
+  "gateCommands": {
+    "G1": "npm run build && npm run lint",
+    "G2": "npm test",
+    "G6": "gitleaks git --no-banner --redact -v . && osv-scanner scan source -r .",
+    "G8": "supabase db lint --local"
+  },
+  "quality": {
+    "typecheck": {
+      "command": "npx tsc -b",
+      "extensions": [
+        ".ts",
+        ".tsx"
+      ],
+      "timeoutSec": 180
+    }
+  },
+  "gateNotes": {
+    "G8": "requiere supabase start local; nunca contra el proyecto remoto"
+  }
+}

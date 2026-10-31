@@ -1,0 +1,26 @@
+{
+  "name": "next-supabase",
+  "description": "Base para proyectos nuevos: Next.js + Supabase en Vercel, con CI, tests, axe y Lighthouse CI desde el día 1.",
+  "detect": { "anyPackageDependsOn": ["next", "@supabase/supabase-js"] },
+  "modules": ["web"],
+  "settings": { "permissions": { "deny": ["mcp__rea"] } },
+  "mcpServers": {
+    "next-devtools": { "command": "npx", "args": ["-y", "next-devtools-mcp@0.4.0"] }
+  },
+  "optionalMcp": {
+    "supabase": {
+      "why": "Advisors, esquema y logs en solo lectura (G8).",
+      "requires": "Autorización del usuario: conecta una cuenta real vía OAuth.",
+      "config": { "type": "http", "url": "https://mcp.supabase.com/mcp?project_ref=<PROJECT_REF>&read_only=true&features=database,docs,debugging" }
+    }
+  },
+  "gates": ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8"],
+  "gateCommands": {
+    "G1": "npx tsc --noEmit && npm run lint && npm run build",
+    "G2": "npm test",
+    "G3": "npx playwright test",
+    "G6": "gitleaks git --no-banner --redact -v . && osv-scanner scan source -r .",
+    "G7": "npx lhci autorun"
+  },
+  "quality": { "typecheck": { "command": "npx tsc --noEmit", "extensions": [".ts", ".tsx"], "timeoutSec": 180 } }
+}

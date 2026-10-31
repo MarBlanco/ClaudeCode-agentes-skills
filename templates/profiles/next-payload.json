@@ -1,0 +1,68 @@
+{
+  "name": "next-payload",
+  "description": "Next.js + Payload CMS sobre Postgres, workspaces npm (Regalarte).",
+  "detect": {
+    "anyPackageDependsOn": [
+      "next",
+      "payload"
+    ]
+  },
+  "modules": [
+    "web"
+  ],
+  "settings": {
+    "permissions": {
+      "deny": [
+        "mcp__rea"
+      ]
+    }
+  },
+  "mcpServers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "next-devtools-mcp@0.4.0"
+      ]
+    }
+  },
+  "optionalMcp": {
+    "vercel": {
+      "why": "Estado de deploys y logs.",
+      "requires": "Autorización del usuario: OAuth con permisos de su cuenta; deploys/producción en ask.",
+      "config": {
+        "type": "http",
+        "url": "https://mcp.vercel.com"
+      }
+    }
+  },
+  "gates": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5",
+    "G6",
+    "G7",
+    "G8"
+  ],
+  "gateCommands": {
+    "G1": "npm run type-check && npm run lint && npm run build",
+    "G2": "npm test --workspace=apps/web",
+    "G6": "gitleaks git --no-banner --redact -v . && osv-scanner scan source -r .",
+    "G8": "npm run migrate:status --workspace=apps/web"
+  },
+  "quality": {
+    "typecheck": {
+      "command": "npm run type-check",
+      "extensions": [
+        ".ts",
+        ".tsx"
+      ],
+      "timeoutSec": 240
+    }
+  },
+  "gateNotes": {
+    "G8": "solo base local; nunca producción"
+  }
+}
