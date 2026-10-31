@@ -166,3 +166,48 @@ test('gitignore: bloque idempotente y archivo nuevo', () => {
   assert.equal(updateGitignore(once), once);
   assert.ok(updateGitignore(null).startsWith('# >>> harness'));
 });
+
+test('archivos CI: se crean, son idempotentes, respetan los propios y detectan ediciones', () => {
+  const dir = viteProject();
+  try {
+    writeFileSync(join(dir, 'app', 'package-lock.json'), '{}');
+    apply(plan(dir, { profile: 'vite-supabase' }));
+    const dep = readFileSync(join(dir, '.github', 'dependabot.yml'), 'utf8');
+    assert.match(dep, /directory: '\/app'/);
+    assert.match(dep, /package-ecosystem: 'github-actions'/);
+    assert.ok(existsSync(join(dir, '.github', 'workflows', 'harness-security.yml')));
+    assert.equal(Object.values(plan(dir, {}).changes).some(Boolean), false, 're-sync sin cambios');
+
+    writeFileSync(join(dir, '.github', 'dependabot.yml'), `${dep}# editado\n`);
+    const pl = plan(dir, {});
+    assert.deepEqual(pl.conflicts.map((c) => c.key), ['.github/dependabot.yml']);
+    assert.throws(() => apply(pl), /Conflictos/);
+  } finally { cleanup(dir); }
+
+  const own = viteProject();
+  try {
+    mkdirSync(join(own, '.github', 'workflows'), { recursive: true });
+    writeFileSync(join(own, '.github', 'dependabot.yml'), 'version: 2\n# propio\n');
+    writeFileSync(join(own, '.github', 'workflows', 'sec.yml'), 'jobs: { x: { steps: [ { run: gitleaks detect } ] } }\n');
+    const pl = plan(own, { profile: 'vite-supabase' });
+    assert.deepEqual(pl.files.own, ['.github/dependabot.yml']);
+    assert.equal(pl.fileContents['.github/workflows/harness-security.yml'], undefined, 'no duplica un workflow de seguridad propio');
+    apply(pl);
+    assert.equal(readFileSync(join(own, '.github', 'dependabot.yml'), 'utf8'), 'version: 2\n# propio\n');
+  } finally { cleanup(own); }
+});
+
+test('archivos CI: CRLF no es conflicto; borrado a mano sí', () => {
+  const dir = viteProject();
+  try {
+    apply(plan(dir, { profile: 'vite-supabase' }));
+    const f = join(dir, '.github', 'dependabot.yml');
+    writeFileSync(f, readFileSync(f, 'utf8').replace(/\n/g, '\r\n'));
+    const crlf = plan(dir, {});
+    assert.deepEqual(crlf.conflicts, []);
+    assert.ok(crlf.files.keep.includes('.github/dependabot.yml'));
+    rmSync(f);
+    const deleted = plan(dir, {});
+    assert.deepEqual(deleted.conflicts.map((c) => `${c.key}: ${c.reason}`), ['.github/dependabot.yml: archivo gestionado borrado a mano']);
+  } finally { cleanup(dir); }
+});

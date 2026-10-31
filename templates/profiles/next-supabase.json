@@ -69,5 +69,9 @@
       ],
       "timeoutSec": 180
     }
-  }
+  },
+  "ciFiles": [
+    "security-workflow",
+    "dependabot"
+  ]
 }

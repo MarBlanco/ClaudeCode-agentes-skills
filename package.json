@@ -1,0 +1,13 @@
+{
+  "name": "claude-code-harness",
+  "private": true,
+  "type": "module",
+  "description": "Harness de Claude Code: marketplace privado (harness-core, harness-web, harness-payments), perfiles y SyncProject.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test \"plugins/*/tests/*.test.mjs\" \"scripts/tests/*.test.mjs\"",
+    "check:skills": "node scripts/check-skills.mjs",
+    "validate": "claude plugin validate --strict . && claude plugin validate --strict plugins/harness-core && claude plugin validate --strict plugins/harness-web && claude plugin validate --strict plugins/harness-payments",
+    "update-check": "node scripts/harness-update-check.mjs"
+  }
+}

@@ -13,8 +13,9 @@
 // .mcp.json (mcpServers), bloque "harness" de .gitignore, .claude/harness.manifest.json.
 // Nunca toca: CLAUDE.md, .claude/settings.local.json, skills/agentes propios.
 // Overrides del proyecto (suyos, nunca escritos por el harness): .claude/harness.project.json
+import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -219,6 +220,99 @@ export function updateGitignore(text) {
   return `${src}${sep}${src === '' ? '' : eol}${block}${eol}`;
 }
 
+// ---------- archivos de CI gestionados ----------
+// Archivos completos que pertenecen al harness (hash registrado en el manifiesto).
+// Si el proyecto ya tiene uno propio en esa ruta, no se toca.
+
+const SECURITY_WORKFLOW = '.github/workflows/harness-security.yml';
+const DEPENDABOT = '.github/dependabot.yml';
+// Hash independiente del fin de línea: git en Windows (autocrlf) reescribe LF ↔ CRLF.
+const sha256 = (text) => createHash('sha256').update(text.replace(/\r\n/g, '\n')).digest('hex');
+
+function projectDirsWith(project, names) {
+  const dirs = new Set();
+  const walk = (dir, depth) => {
+    if (depth > 3) return;
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      if (e.name === 'node_modules' || e.name.startsWith('.') || ['dist', 'build', 'venv'].includes(e.name)) continue;
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p, depth + 1);
+      else if (names.includes(e.name)) dirs.add(`/${relative(project, dir).split(sep).join('/')}`.replace(/\/$/, '') || '/');
+    }
+  };
+  walk(project, 0);
+  return [...dirs].sort();
+}
+
+export function generateDependabot(project) {
+  const entry = (eco, dir) => [
+    `  - package-ecosystem: '${eco}'`,
+    `    directory: '${dir}'`,
+    '    schedule:',
+    "      interval: 'weekly'",
+    "      day: 'monday'",
+    '    open-pull-requests-limit: 5',
+    '    groups:',
+    '      minor-and-patch:',
+    '        update-types: [minor, patch]',
+    '    commit-message:',
+    "      prefix: 'chore(deps)'",
+  ].join('\n');
+  const blocks = [
+    ...projectDirsWith(project, ['package-lock.json']).map((d) => entry('npm', d)),
+    ...projectDirsWith(project, ['requirements.txt', 'pyproject.toml']).map((d) => entry('pip', d)),
+    entry('github-actions', '/'),
+  ];
+  return [
+    '# Gestionado por el harness (SyncProject v2). Majors: PR separado, revisión y merge siempre manuales.',
+    'version: 2',
+    'updates:',
+    ...blocks,
+    '',
+  ].join('\n');
+}
+
+function hasOwnSecurityWorkflow(project) {
+  const dir = join(project, '.github', 'workflows');
+  if (!existsSync(dir)) return false;
+  return readdirSync(dir).some((f) => f !== 'harness-security.yml' && /\.ya?ml$/.test(f)
+    && /gitleaks|osv-scanner/i.test(readFileSync(join(dir, f), 'utf8')));
+}
+
+export function desiredFiles(project, profile) {
+  const files = {};
+  const ci = profile.ciFiles ?? [];
+  if (ci.includes('security-workflow') && !hasOwnSecurityWorkflow(project)) {
+    files[SECURITY_WORKFLOW] = readFileSync(join(REPO, 'templates', 'ci', 'harness-security.yml'), 'utf8');
+  }
+  if (ci.includes('dependabot')) files[DEPENDABOT] = generateDependabot(project);
+  return files;
+}
+
+/** Plan de archivos: add / update / remove / keep / own (del proyecto, no se toca) / conflict. */
+export function planFiles(project, desired, managed = {}) {
+  const plan = { add: [], update: [], remove: [], keep: [], own: [], conflict: [] };
+  for (const [rel, content] of Object.entries(desired)) {
+    const abs = join(project, rel);
+    const current = existsSync(abs) ? sha256(readFileSync(abs, 'utf8')) : null;
+    if (Object.hasOwn(managed, rel)) {
+      if (current === null) plan.conflict.push({ key: rel, reason: 'archivo gestionado borrado a mano' });
+      else if (current !== managed[rel]) plan.conflict.push({ key: rel, reason: 'archivo gestionado editado a mano' });
+      else if (sha256(content) !== managed[rel]) plan.update.push(rel);
+      else plan.keep.push(rel);
+    } else if (current === null) plan.add.push(rel);
+    else plan.own.push(rel);
+  }
+  for (const [rel, hash] of Object.entries(managed)) {
+    if (Object.hasOwn(desired, rel)) continue;
+    const abs = join(project, rel);
+    if (!existsSync(abs)) continue;
+    if (sha256(readFileSync(abs, 'utf8')) === hash) plan.remove.push(rel);
+    else plan.conflict.push({ key: rel, reason: 'archivo gestionado a retirar fue editado a mano' });
+  }
+  return plan;
+}
+
 // ---------- operaciones ----------
 
 function paths(project) {
@@ -273,9 +367,16 @@ export function plan(project, { profile: profileName, modules = [], retireLegacy
     optionalMcp: Object.keys(profile.optionalMcp ?? {}),
     managed: {},
     adopted: {},
+    managedFiles: {},
   };
   for (const key of [...entries.add, ...entries.update, ...entries.keep]) manifest.managed[key] = desired[key];
   for (const key of entries.adopt) manifest.adopted[key] = desired[key];
+
+  const fileContents = desiredFiles(project, profile);
+  const files = planFiles(project, fileContents, prev?.managedFiles ?? {});
+  for (const rel of [...files.add, ...files.update, ...files.keep]) manifest.managedFiles[rel] = sha256(fileContents[rel]);
+  // Un archivo en conflicto sigue gestionado con su hash anterior
+  for (const { key } of files.conflict) if (prev?.managedFiles?.[key]) manifest.managedFiles[key] = prev.managedFiles[key];
 
   const giText = readText(p.gitignore);
   const giNext = updateGitignore(giText);
@@ -285,7 +386,10 @@ export function plan(project, { profile: profileName, modules = [], retireLegacy
 
   return {
     project, profile, prev, settings, mcp, settingsText, mcpText, giText, giNext, desired, entries, manifest, legacy,
+    files, fileContents,
+    conflicts: [...entries.conflict, ...files.conflict],
     changes: {
+      files: files.add.length + files.update.length + files.remove.length > 0,
       settings: [...entries.add, ...entries.update, ...entries.remove].some((k) => !k.startsWith('mcpServers:')),
       mcp: [...entries.add, ...entries.update, ...entries.remove].some((k) => k.startsWith('mcpServers:')),
       gitignore: giText !== giNext,
@@ -296,8 +400,8 @@ export function plan(project, { profile: profileName, modules = [], retireLegacy
 }
 
 export function apply(planned, { now = new Date() } = {}) {
-  if (planned.entries.conflict.length) {
-    throw new Error(`Conflictos: no se escribió nada.\n${planned.entries.conflict.map((c) => `  - ${c.key}: ${c.reason}`).join('\n')}`);
+  if (planned.conflicts.length) {
+    throw new Error(`Conflictos: no se escribió nada.\n${planned.conflicts.map((c) => `  - ${c.key}: ${c.reason}`).join('\n')}`);
   }
   const p = paths(planned.project);
   const c = planned.changes;
@@ -314,7 +418,14 @@ export function apply(planned, { now = new Date() } = {}) {
     if (existed[k]) cpSync(f, join(bdir, k));
   }
   for (const rel of planned.legacy) cpSync(join(planned.project, rel), join(bdir, 'legacy', rel), { recursive: true });
-  writeFileSync(join(bdir, 'backup.json'), JSON.stringify({ createdAt: now.toISOString(), existed, retired: planned.legacy }, null, 2));
+  const touchedFiles = [...planned.files.add, ...planned.files.update, ...planned.files.remove];
+  const fileExisted = {};
+  for (const rel of touchedFiles) {
+    const abs = join(planned.project, rel);
+    fileExisted[rel] = existsSync(abs);
+    if (fileExisted[rel]) cpSync(abs, join(bdir, 'files', rel));
+  }
+  writeFileSync(join(bdir, 'backup.json'), JSON.stringify({ createdAt: now.toISOString(), existed, retired: planned.legacy, files: fileExisted }, null, 2));
 
   const written = [];
   const settings = structuredClone(planned.settings);
@@ -332,7 +443,15 @@ export function apply(planned, { now = new Date() } = {}) {
     writeAtomic(p.gitignore, planned.giNext);
     written.push('.gitignore');
   }
-  if (c.manifest || c.settings || c.mcp) {
+  for (const rel of [...planned.files.add, ...planned.files.update]) {
+    writeAtomic(join(planned.project, rel), planned.fileContents[rel]);
+    written.push(rel);
+  }
+  for (const rel of planned.files.remove) {
+    rmSync(join(planned.project, rel));
+    written.push(`retirado ${rel}`);
+  }
+  if (c.manifest || c.settings || c.mcp || c.files) {
     writeAtomic(p.manifest, formatJson({ ...planned.manifest, syncedAt: now.toISOString() }, jsonStyle(null)));
     written.push('.claude/harness.manifest.json');
   }
@@ -369,6 +488,12 @@ export function rollback(project, ts) {
     cpSync(join(bdir, 'legacy', rel), join(project, rel), { recursive: true });
     restored.push(rel);
   }
+  for (const [rel, existedBefore] of Object.entries(meta.files ?? {})) {
+    const abs = join(project, rel);
+    if (existedBefore) cpSync(join(bdir, 'files', rel), abs);
+    else if (existsSync(abs)) rmSync(abs);
+    restored.push(rel);
+  }
   return { backup: target, restored };
 }
 
@@ -382,7 +507,11 @@ function printPlan(pl) {
   section('Actualizar', e.update);
   section('Retirar', e.remove);
   section('Adoptar (ya existía igual; queda como del proyecto)', e.adopt);
-  section('CONFLICTOS', e.conflict);
+  section('CONFLICTOS', pl.conflicts);
+  section('Archivos CI: agregar', pl.files.add);
+  section('Archivos CI: actualizar', pl.files.update);
+  section('Archivos CI: retirar', pl.files.remove);
+  section('Archivos CI propios del proyecto (no se tocan)', pl.files.own);
   if (pl.changes.gitignore) out.push('.gitignore: agregar bloque harness (.harness/, .claude/.harness-backup/)');
   section('Copias legadas a retirar (con backup)', pl.legacy);
   if (pl.manifest.optionalMcp.length) out.push(`MCP opcionales no escritos (requieren autorización): ${pl.manifest.optionalMcp.join(', ')}`);
@@ -419,7 +548,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     } else {
       const pl = plan(a.project, a);
       printPlan(pl);
-      if (pl.entries.conflict.length) process.exit(2);
+      if (pl.conflicts.length) process.exit(2);
       if (a.apply) {
         const r = apply(pl);
         console.log(r.backup ? `Aplicado. Backup: .claude/.harness-backup/${r.backup}\n${r.written.map((w) => `  ${w}`).join('\n')}` : 'Nada que aplicar.');

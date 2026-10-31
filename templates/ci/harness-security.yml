@@ -1,0 +1,52 @@
+# Gestionado por el harness (SyncProject v2). No editar: los cambios se pierden al sincronizar.
+# Gate G6 en CI: secretos (gitleaks) y vulnerabilidades de dependencias (osv-scanner).
+# Binarios oficiales con versión fijada y SHA-256 verificado. Sin despliegues ni escrituras.
+name: harness-security
+
+on:
+  pull_request:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: harness-security-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITLEAKS_VERSION: '8.30.1'
+  OSV_SCANNER_VERSION: '2.7.0'
+
+jobs:
+  g6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Instalar gitleaks y osv-scanner (checksum verificado)
+        run: |
+          set -euo pipefail
+          GL="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "$GL" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${GL}"
+          curl -sSfL -o gl-sums.txt "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          grep " ${GL}\$" gl-sums.txt | sha256sum -c -
+          tar xzf "$GL" gitleaks
+          OSV="osv-scanner_linux_amd64"
+          curl -sSfL -o "$OSV" "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/${OSV}"
+          curl -sSfL -o osv-sums.txt "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_SHA256SUMS"
+          grep " ${OSV}\$" osv-sums.txt | sha256sum -c -
+          chmod +x "$OSV" && mv "$OSV" osv-scanner
+
+      - name: Secretos (gitleaks)
+        run: ./gitleaks git --no-banner --redact -v .
+
+      - name: Vulnerabilidades (osv-scanner)
+        if: always()
+        run: ./osv-scanner scan source -r .

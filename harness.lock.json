@@ -1,0 +1,48 @@
+{
+  "$comment": "Inventario versionado de todo componente del harness. Lo lee scripts/harness-update-check.mjs (solo lectura). Actualizar este archivo en la misma rama que el cambio de versión, tras validar.",
+  "schema": 1,
+  "verifiedAt": "2026-10-31",
+  "components": [
+    { "id": "harness-core", "type": "plugin", "scope": "user", "source": { "kind": "local", "path": "plugins/harness-core" }, "version": "0.9.2", "license": "UNLICENSED", "criticality": "critical", "test": "node --test plugins/harness-core/tests/*.test.mjs" },
+    { "id": "harness-web", "type": "plugin", "scope": "project", "source": { "kind": "local", "path": "plugins/harness-web" }, "version": "0.9.0", "license": "UNLICENSED", "criticality": "normal", "test": "node scripts/check-skills.mjs" },
+    { "id": "harness-payments", "type": "plugin", "scope": "project", "source": { "kind": "local", "path": "plugins/harness-payments" }, "version": "0.9.0", "license": "UNLICENSED", "criticality": "critical", "test": "node --test plugins/harness-payments/tests/*.test.mjs" },
+
+    { "id": "security-guidance", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "security-guidance@claude-plugins-official" }, "version": "2.0.17", "license": "Apache-2.0", "criticality": "critical" },
+    { "id": "typescript-lsp", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "typescript-lsp@claude-plugins-official" }, "version": "1.0.0", "license": "Apache-2.0", "criticality": "normal" },
+    { "id": "context7", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "context7@claude-plugins-official" }, "version": "a7ba5b93db0c", "license": "MIT", "criticality": "normal", "notes": "Su MCP requiere autenticación del usuario (/mcp)." },
+    { "id": "pr-review-toolkit", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "pr-review-toolkit@claude-plugins-official" }, "version": "1.0.1", "license": "Apache-2.0", "criticality": "normal" },
+    { "id": "claude-security", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "claude-security@claude-plugins-official" }, "version": "0.12.0", "license": "LicenseRef-Anthropic", "criticality": "normal" },
+    { "id": "mercadopago", "type": "plugin", "scope": "project", "source": { "kind": "claude-plugin", "plugin": "mercadopago@claude-plugins-official", "repo": "mercadopago/mercadopago-claude-marketplace" }, "version": "4.3.2", "license": "Apache-2.0", "criticality": "critical", "test": "hooks probados en Windows 31-10-2026 (python3 + bash de Git)" },
+    { "id": "caveman", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "caveman@caveman", "repo": "JuliusBrussee/caveman" }, "version": "4.0.1", "license": "Apache-2.0", "criticality": "normal" },
+
+    { "id": "skill:vercel-react-best-practices", "type": "vendored-skill", "source": { "kind": "github-commit", "repo": "vercel-labs/agent-skills", "path": "skills/react-best-practices", "ref": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62" }, "localPath": "plugins/harness-web/skills/vercel-react-best-practices", "license": "MIT", "criticality": "normal" },
+    { "id": "skill:vercel-composition-patterns", "type": "vendored-skill", "source": { "kind": "github-commit", "repo": "vercel-labs/agent-skills", "path": "skills/composition-patterns", "ref": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62" }, "localPath": "plugins/harness-web/skills/vercel-composition-patterns", "license": "MIT", "criticality": "normal" },
+    { "id": "skill:web-design-guidelines", "type": "vendored-skill", "source": { "kind": "github-commit", "repo": "vercel-labs/agent-skills", "path": "skills/web-design-guidelines", "ref": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62" }, "localPath": "plugins/harness-web/skills/web-design-guidelines", "license": "MIT", "criticality": "normal" },
+    { "id": "skill:playwright-cli", "type": "vendored-skill", "source": { "kind": "github-commit", "repo": "microsoft/playwright-cli", "path": "skills/playwright-cli", "ref": "0a808078d96496cf2a8fa725143c870354f63cda" }, "localPath": "plugins/harness-web/skills/playwright-cli", "license": "Apache-2.0", "criticality": "normal" },
+    { "id": "skill:systematic-debugging", "type": "vendored-skill", "source": { "kind": "github-commit", "repo": "obra/superpowers", "path": "skills/systematic-debugging", "ref": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b" }, "localPath": "plugins/harness-core/skills/systematic-debugging", "license": "MIT", "criticality": "normal" },
+    { "id": "skill:frontend-design", "type": "vendored-skill", "source": { "kind": "github-commit", "repo": "anthropics/claude-plugins-official", "path": "plugins/frontend-design/skills/frontend-design", "ref": "a7ba5b93db0c7c8d17f3f1d25853adca79598a1a" }, "localPath": "plugins/harness-web/skills/frontend-design", "license": "Apache-2.0", "criticality": "normal" },
+    { "id": "skill:design-loop", "type": "vendored-skill", "source": { "kind": "github-commit", "repo": "devonbweaver/design-loop", "path": "", "ref": "de113bda59df5dab8a2567c166d0b6dbad40d869" }, "localPath": "plugins/harness-web/skills/design-loop", "license": "MIT", "criticality": "normal" },
+    { "id": "skill:skill-development", "type": "vendored-skill", "source": { "kind": "github-commit", "repo": "anthropics/claude-plugins-official", "path": "plugins/plugin-dev/skills/skill-development", "ref": "a7ba5b93db0c7c8d17f3f1d25853adca79598a1a" }, "localPath": ".claude/skills/skill-development", "license": "Apache-2.0", "criticality": "low" },
+    { "id": "skill:skill-creator", "type": "vendored-skill", "source": { "kind": "github-commit", "repo": "anthropics/skills", "path": "skills/skill-creator", "ref": "ca45fc496a3436251f191354091d557da31c15b5" }, "localPath": ".claude/skills/skill-creator", "license": "Apache-2.0", "criticality": "low", "notes": "Parches locales de seguridad en eval-viewer/generate_review.py (escape de JSON embebido; Host/Origin/Content-Type). Reaplicar al actualizar." },
+    { "id": "skill:chrome-devtools", "type": "skill", "source": { "kind": "local", "path": "plugins/harness-web/skills/chrome-devtools" }, "license": "UNLICENSED", "criticality": "normal" },
+
+    { "id": "mcp:chrome-devtools", "type": "mcp", "scope": "user", "source": { "kind": "npm", "package": "chrome-devtools-mcp" }, "version": "latest", "license": "Apache-2.0", "criticality": "normal", "notes": "Configurado con @latest (sin fijar) en la config de usuario existente." },
+    { "id": "mcp:codebase-memory", "type": "mcp", "scope": "user", "source": { "kind": "github-release", "repo": "DeusData/codebase-memory-mcp", "tagPrefix": "v" }, "version": "0.12.1", "license": "MIT", "criticality": "low" },
+    { "id": "mcp:next-devtools", "type": "mcp", "scope": "project", "source": { "kind": "npm", "package": "next-devtools-mcp" }, "version": "0.4.0", "license": "MIT", "criticality": "low" },
+    { "id": "mcp:mercadopago", "type": "mcp", "scope": "project", "source": { "kind": "remote", "url": "https://mcp.mercadopago.com/mcp" }, "license": "service", "criticality": "normal", "notes": "Sin versión controlable: prueba de humo de las tools usadas." },
+
+    { "id": "cli:typescript-language-server", "type": "cli", "scope": "machine", "source": { "kind": "npm", "package": "typescript-language-server" }, "version": "6.0.2", "license": "Apache-2.0", "criticality": "normal" },
+    { "id": "cli:typescript", "type": "cli", "scope": "machine", "source": { "kind": "npm", "package": "typescript", "majorCap": 6 }, "version": "6.0.3", "license": "Apache-2.0", "criticality": "normal", "notes": "TS 7 (nativo) no trae tsserver: el LSP necesita la línea 6.x como respaldo global." },
+    { "id": "cli:gitleaks", "type": "cli", "scope": "machine", "source": { "kind": "github-release", "repo": "gitleaks/gitleaks", "tagPrefix": "v" }, "version": "8.30.1", "license": "MIT", "criticality": "critical", "test": "scripts/install-qa-tools.ps1 -Status" },
+    { "id": "cli:osv-scanner", "type": "cli", "scope": "machine", "source": { "kind": "github-release", "repo": "google/osv-scanner", "tagPrefix": "v" }, "version": "2.7.0", "license": "Apache-2.0", "criticality": "critical", "test": "scripts/install-qa-tools.ps1 -Status" },
+    { "id": "qa:@playwright/test", "type": "qa-tool", "scope": "project", "source": { "kind": "npm", "package": "@playwright/test" }, "version": "1.64.1", "license": "Apache-2.0", "criticality": "normal" },
+    { "id": "qa:@axe-core/playwright", "type": "qa-tool", "scope": "project", "source": { "kind": "npm", "package": "@axe-core/playwright" }, "version": "4.14.0", "license": "MPL-2.0", "criticality": "normal" },
+    { "id": "qa:@lhci/cli", "type": "qa-tool", "scope": "project", "source": { "kind": "npm", "package": "@lhci/cli" }, "version": "0.15.1", "license": "Apache-2.0", "criticality": "normal" },
+    { "id": "runtime:claude-code", "type": "runtime", "scope": "machine", "source": { "kind": "npm", "package": "@anthropic-ai/claude-code" }, "version": "2.1.288", "license": "LicenseRef-Anthropic", "criticality": "critical" }
+  ],
+  "projects": [
+    { "name": "Campito", "path": "../Club atletico Campito", "profile": "vite-supabase" },
+    { "name": "Regalarte", "path": "../RegalarteWeb", "profile": "next-payload" },
+    { "name": "Sentri", "path": "../Sentri CM", "profile": "django-react" }
+  ]
+}

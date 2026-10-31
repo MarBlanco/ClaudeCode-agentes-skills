@@ -58,5 +58,5 @@ Fuente: `docs/your-integrations/notifications/webhooks`.
 
 ## Herramientas oficiales
 
-- Plugin `mercadopago@claude-plugins-official` 4.3.2 (Apache-2.0, repo `mercadopago/mercadopago-claude-marketplace`, commit `9815b7f`): agente `mp-integration-expert`; skills `mp-integrate`, `mp-webhooks`, `mp-test-setup`, `mp-review`; MCP remoto `https://mcp.mercadopago.com/mcp`; hook PreToolUse (`python3 validate_mp_credentials.py`) que bloquea lectura de `.env` y fugas de credenciales.
+- Plugin `mercadopago@claude-plugins-official` 4.3.2 (Apache-2.0, repo `mercadopago/mercadopago-claude-marketplace`, commit `9815b7f`): agente `mp-integration-expert`; skills `mp-integrate`, `mp-webhooks`, `mp-test-setup`, `mp-review`; MCP remoto `https://mcp.mercadopago.com/mcp`; hook PreToolUse (`python3 validate_mp_credentials.py`) que bloquea credenciales MP hardcodeadas en cualquier proyecto y la lectura de `.env` solo cuando detecta un proyecto de Mercado Pago (la protección general de `.env` la da el guard de harness-core). Probado en Windows el 31-10-2026: funciona con `python3` de PyManager y `bash` de Git.
 - SDK Node `mercadopago` (MIT). Opcional por proyecto: Regalarte integra Orders por HTTP sin SDK.

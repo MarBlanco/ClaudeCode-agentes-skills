@@ -1,0 +1,4 @@
+# Falsos positivos revisados (harness G6, 31-10-2026).
+# design-loop/EXAMPLE.md:32 es texto de ejemplo ("tokens: ... token-only"), no una clave.
+3bac4da25038b94dbbb49e2a66bd5a4966658c81:.claude/skills/design-loop/EXAMPLE.md:generic-api-key:32
+plugins/harness-web/skills/design-loop/EXAMPLE.md:generic-api-key:32

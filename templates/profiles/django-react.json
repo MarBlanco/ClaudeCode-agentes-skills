@@ -45,5 +45,9 @@
     ],
     "G8": "cd backend && python manage.py makemigrations --check --dry-run"
   },
-  "quality": {}
+  "quality": {},
+  "ciFiles": [
+    "security-workflow",
+    "dependabot"
+  ]
 }

@@ -64,5 +64,9 @@
   },
   "gateNotes": {
     "G8": "requiere supabase start local; nunca contra el proyecto remoto"
-  }
+  },
+  "ciFiles": [
+    "security-workflow",
+    "dependabot"
+  ]
 }

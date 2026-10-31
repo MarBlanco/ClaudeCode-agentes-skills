@@ -1,0 +1,12 @@
+# Dependabot del repo del harness: solo GitHub Actions (el package.json no tiene dependencias).
+# Merge siempre manual: no hay auto-merge configurado.
+version: 2
+updates:
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: 'chore(ci)'

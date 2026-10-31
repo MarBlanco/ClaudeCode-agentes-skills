@@ -13,3 +13,6 @@ node_modules/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Evidencia y caché de los gates del harness
+.harness/

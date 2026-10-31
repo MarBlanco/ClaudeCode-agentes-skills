@@ -1,0 +1,76 @@
+# CI del harness: valida en cada push/PR y revisa actualizaciones una vez por semana.
+# Sin despliegues, sin auto-merge, sin escrituras al repo. El chequeo semanal solo
+# abre o actualiza un issue con los candidatos a actualizar.
+name: harness-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: harness-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Tests (hooks, payments, SyncProject, update-check)
+        run: npm test
+      - name: Skills (frontmatter, nombres únicos, referencias)
+        run: npm run check:skills
+      - name: Validación de marketplace y plugins
+        run: |
+          npm install -g @anthropic-ai/claude-code@2.1.288
+          npm run validate
+
+  update-check:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Chequeo de actualizaciones (solo lectura)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/harness-update-check.mjs --out report.md
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Abrir o actualizar el issue de actualizaciones
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! grep -qE '^\| (ALERT|MAJOR|UPDATE) \|' report.md; then
+            echo "Sin candidatos a actualizar."
+            exit 0
+          fi
+          title="Harness update check"
+          number=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number')
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --body-file report.md
+          else
+            gh issue create --title "$title" --body-file report.md
+          fi
