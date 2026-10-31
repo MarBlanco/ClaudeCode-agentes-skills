@@ -45,9 +45,10 @@ claude plugin install mercadopago@claude-plugins-official --scope user; claude p
 ## Aplicar el harness a un proyecto (SyncProject v2)
 
 ```powershell
-node scripts/sync-project.mjs --project <ruta> --profile next-payload --modules payments --retire-legacy   # dry-run
-node scripts/sync-project.mjs --project <ruta> --apply                                                     # backup + escritura
-node scripts/sync-project.mjs --project <ruta> --rollback [<timestamp>]                                    # restaura byte a byte
+node scripts/sync-project.mjs --project <ruta> --profile next-payload --modules payments --retire-legacy           # dry-run
+node scripts/sync-project.mjs --project <ruta> --profile next-payload --modules payments --retire-legacy --apply   # backup + escritura
+node scripts/sync-project.mjs --project <ruta> --apply                                                             # re-sync (perfil y módulos del manifiesto)
+node scripts/sync-project.mjs --project <ruta> --rollback [<timestamp>]                                            # restaura byte a byte
 ```
 
 (`scripts/sync-project.ps1` es un envoltorio con los mismos parámetros.)

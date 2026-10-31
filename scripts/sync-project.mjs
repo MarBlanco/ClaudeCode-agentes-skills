@@ -317,7 +317,7 @@ export function planFiles(project, desired, managed = {}) {
   for (const [rel, hash] of Object.entries(managed)) {
     if (Object.hasOwn(desired, rel)) continue;
     if (!MANAGED_FILE_PATHS.has(rel) || !isSafeRel(project, rel)) {
-      plan.conflict.push({ key: rel, reason: 'ruta gestionada no permitida en el manifiesto (se ignora)' });
+      plan.conflict.push({ key: rel, reason: 'ruta gestionada no permitida en el manifiesto: eliminarla de managedFiles en .claude/harness.manifest.json (o hacer --rollback)' });
       continue;
     }
     const abs = join(project, rel);
@@ -533,7 +533,8 @@ function printPlan(pl) {
   section('Copias legadas a retirar (con backup)', pl.legacy);
   if (pl.manifest.optionalMcp.length) out.push(`MCP opcionales no escritos (requieren autorización): ${pl.manifest.optionalMcp.join(', ')}`);
   const any = Object.values(pl.changes).some(Boolean);
-  out.push(any ? 'Cambios pendientes.' : 'Sin cambios: el proyecto ya está sincronizado.');
+  if (pl.conflicts.length) out.push('Hay conflictos: no se aplicará nada hasta resolverlos.');
+  else out.push(any ? 'Cambios pendientes.' : 'Sin cambios: el proyecto ya está sincronizado.');
   console.log(out.join('\n'));
 }
 
