@@ -1,6 +1,6 @@
 {
   "name": "harness-core",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "Núcleo del harness: método (producto, arquitectura, plan, work, review, debugging, entrega y operación, documentación, mantenimiento), agentes code-reviewer y qa-verifier, gates G1–G9 y hooks de protección (secretos, lockfiles, migraciones, operaciones destructivas, política por agente) y calidad.",
   "author": {
     "name": "Martin Blanco"

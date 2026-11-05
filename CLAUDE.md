@@ -13,7 +13,7 @@ No contiene código de producto ni depende de proyectos consumidores concretos.
 ## 2. Estructura del repositorio
 
 - `global/HARNESS.md`: reglas globales reutilizables. Se instala como `~/.claude/HARNESS.md`.
-- `CLAUDE.md`: reglas de este repositorio. Importa `@global/HARNESS.md`.
+- `CLAUDE.md`: reglas de este repositorio (las globales llegan por `~/.claude/CLAUDE.md`, no por import).
 - `.claude-plugin/marketplace.json`: catálogo del marketplace privado `harness`.
 - `plugins/harness-core|harness-web|harness-saas|harness-payments/`: plugins (skills, agentes, hooks, tests).
 - `docs/CAPABILITIES.md`: matriz de capacidades, inventario, fuentes, controles preventivos vs. de instrucciones y pruebas.

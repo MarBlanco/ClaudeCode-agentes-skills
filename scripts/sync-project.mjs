@@ -233,7 +233,7 @@ const MANAGED_FILE_PATHS = new Set([SECURITY_WORKFLOW, DEPENDABOT]);
 
 /** Ruta relativa segura dentro del proyecto (sin absolutas, "..", ni UNC). */
 export function isSafeRel(project, rel) {
-  if (typeof rel !== 'string' || !rel || isAbsolute(rel) || /^[\\/]{2}/.test(rel)) return false;
+  if (typeof rel !== 'string' || !rel || isAbsolute(rel) || /^[A-Za-z]:/.test(rel) || /^[\\/]{2}/.test(rel)) return false;
   if (rel.split(/[\\/]/).includes('..')) return false;
   const abs = resolve(project, rel);
   return abs.startsWith(resolve(project) + sep);

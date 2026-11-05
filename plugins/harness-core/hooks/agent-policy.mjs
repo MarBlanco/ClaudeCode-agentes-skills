@@ -198,7 +198,7 @@ function parse(cmd) {
     // Bash solo separa con espacio y tabulador: cualquier otro espacio o control desincronizaría el análisis.
     if (/[\s\u0000-\u001f\u007f]/.test(ch)) throw new Deny('espacio o carácter de control no permitido fuera de comillas');
     if (/[$`\\(){}*?[\]#;|<!]/.test(ch)) throw new Deny(SHELL_CHAR);
-    // "~" solo se expande al inicio de una palabra o tras "=" / ":" (rutas cortas de Windows como MUAWAL~1 son literales).
+    // "~" solo se expande al inicio de una palabra o tras "=" / ":" (los nombres cortos 8.3 de Windows, p. ej. USUARIO~1, son literales).
     if (ch === '~' && (!cur || /[=:]$/.test(cur)) && !has) throw new Deny('"~" (directorio personal) no permitido');
     if (ch === '&') {
       if (nx === '&') { i++; endSeg('&&'); continue; }

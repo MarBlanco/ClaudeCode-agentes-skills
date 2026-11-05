@@ -1,5 +1,18 @@
 # Changelog
 
+## harness-core 0.12.2 · harness-payments 0.9.2 — 2026-11-05 (portabilidad, CI y demostraciones)
+
+### Corregido
+- **Linux:** el CI de GitHub fallaba en 3 tests de seguridad. `guard.mjs` usaba `path.basename` y `sync-project.mjs` `isAbsolute`, que en Linux no tratan `C:\\...` como ruta de Windows: un `.env` con ruta de Windows no se detectaba como secreto y `C:\\Windows\\x` se aceptaba como relativa. Ahora ambas plataformas separan por `/` y `\\` y rechazan rutas con unidad. Verificado en Windows 10 y Ubuntu (WSL2).
+- `payments-engineer` no declaraba `tools` (heredaba todas): ahora lista explícita (Read, Grep, Glob, Edit, Write, Bash, Skill).
+- Comentario con nombre de usuario en `agent-policy.mjs`; rutas de máquina eliminadas de scripts y documentación.
+
+### Agregado
+- CI: matriz Ubuntu + Windows, validación de plugins con Claude Code 2.1.316, `gitleaks` sobre todo el historial (SHA-256 fijado), `check:consistency` y `demo:sync`.
+- `scripts/check-consistency.mjs` (versiones marketplace ↔ plugin ↔ lock ↔ CHANGELOG, hooks, permisos de agentes de solo lectura, rutas privadas, licencia) con 8 tests.
+- Demostraciones: `npm run demo:sync` (SyncProject: dry-run, apply, idempotencia, conflicto, rollback) y `npm run demo:qa` (regresión sobre la app con 7 defectos sembrados) + `examples/qa-explorer-run` (informe, capturas y specs reales, con su procedencia).
+- README reescrito para revisión técnica; `CAPABILITIES.md` actualizado (inventario, capacidades 23–25 y pruebas del 2026-11-05).
+
 ## harness-core 0.12.1 · harness-web 0.12.6 — 2026-11-05 (revisión de seguridad automática)
 
 ### Seguridad

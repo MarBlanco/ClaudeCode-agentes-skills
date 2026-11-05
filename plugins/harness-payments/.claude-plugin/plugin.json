@@ -1,6 +1,6 @@
 {
   "name": "harness-payments",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Payments Core del harness: contrato agnóstico de proveedor, máquina de estados, webhooks autenticados, idempotencia, agente payments-engineer y revisión payments-review. Delega lo específico de Mercado Pago al plugin oficial mercadopago.",
   "author": { "name": "Martin Blanco" },
   "keywords": ["harness", "payments", "mercadopago", "webhooks"]

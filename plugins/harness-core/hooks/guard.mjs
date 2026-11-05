@@ -6,8 +6,12 @@
 // impide trabajar es peor que la red de seguridad de permissions.deny.
 import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { basename, dirname, isAbsolute, resolve } from 'node:path';
+import { dirname, isAbsolute, resolve } from 'node:path';
 import { evaluateExplorer, isExplorer } from './agent-policy.mjs';
+
+// Último componente de una ruta con separadores de Windows y POSIX, igual en cualquier plataforma
+// (en Linux, path.basename no separa por "\\" y dejaría pasar C:\proyecto\.env).
+const leaf = (p) => String(p ?? '').split(/[\\/]+/).filter(Boolean).pop() ?? '';
 
 const FILE_TOOLS = new Set(['Read', 'Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 const WRITE_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
@@ -21,7 +25,7 @@ const MIGRATION_DIR = /(^|[\\/])migrations[\\/]/i;
 
 export function isSecretPath(p) {
   if (!p) return false;
-  const name = basename(String(p).replace(/[\\/]+$/, ''));
+  const name = leaf(String(p).replace(/[\\/]+$/, ''));
   if (/^\.env(\..+)?$/i.test(name)) return !ENV_SAFE.test(name);
   if (/\.(pem|key|p12|pfx|jks|keystore)$/i.test(name)) return true;
   if (/^id_(rsa|dsa|ecdsa|ed25519)$/i.test(name)) return true;
@@ -58,7 +62,7 @@ export function secretInCommand(cmd, cwd = process.cwd()) {
       const target = after(w);
       // Una asignación ("a=(.tls.key)") es un arreglo de bash con un nombre de archivo, no una expresión.
       const exception = after(raw) === raw && isPropertyPathNotFile(raw, cwd);
-      if (isSecretPath(target) && !exception) return basename(target);
+      if (isSecretPath(target) && !exception) return leaf(target);
     }
   }
   return null;
@@ -103,9 +107,9 @@ function isTracked(cwd, file) {
 
 function evaluateFile(tool, ti, cwd) {
   const p = ti.file_path ?? ti.notebook_path ?? ti.path;
-  if (isSecretPath(p)) return ['deny', `Archivo de secretos protegido: ${basename(p)}. Usá .env.example o pedí el valor al usuario.`];
+  if (isSecretPath(p)) return ['deny', `Archivo de secretos protegido: ${leaf(p)}. Usá .env.example o pedí el valor al usuario.`];
   if (!WRITE_TOOLS.has(tool) || !p) return null;
-  const name = basename(p);
+  const name = leaf(p);
   if (LOCKFILES.has(name)) return ['deny', `${name} no se edita a mano: usá el gestor de paquetes (npm/pnpm/uv/poetry).`];
   if (MIGRATION_DIR.test(p) && name !== '__init__.py' && isTracked(cwd, p)) {
     return ['deny', `Migración ya versionada en git: ${name}. Creá una migración nueva en lugar de editar la existente.`];

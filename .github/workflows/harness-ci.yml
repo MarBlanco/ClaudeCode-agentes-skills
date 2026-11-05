@@ -1,4 +1,4 @@
-# CI del harness: valida en cada push/PR y revisa actualizaciones una vez por semana.
+# CI del harness: valida en cada push a main y en cada PR y revisa actualizaciones una vez por semana.
 # Sin despliegues, sin auto-merge, sin escrituras al repo. El chequeo semanal solo
 # abre o actualiza un issue con los candidatos a actualizar.
 name: harness-ci
@@ -19,8 +19,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
+  test:
     if: github.event_name != 'schedule'
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Tests (hooks, agentes, pagos, SyncProject, memoria, consistencia)
+        run: npm test
+      - name: Skills (frontmatter, nombres únicos, referencias)
+        run: npm run check:skills
+      - name: Consistencia (versiones, hooks, agentes, privacidad, licencia)
+        run: npm run check:consistency
+      - name: Demostración de SyncProject (dry-run, apply, conflicto, rollback)
+        run: npm run demo:sync
+
+  plugins:
+    if: github.event_name != 'schedule'
+    name: marketplace y plugins
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -30,14 +56,28 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
-      - name: Tests (hooks, payments, SyncProject, update-check)
-        run: npm test
-      - name: Skills (frontmatter, nombres únicos, referencias)
-        run: npm run check:skills
-      - name: Validación de marketplace y plugins
+      - name: Validación estricta de marketplace y plugins
         run: |
-          npm install -g @anthropic-ai/claude-code@2.1.288
+          npm install -g @anthropic-ai/claude-code@2.1.316
           npm run validate
+
+  secrets:
+    if: github.event_name != 'schedule'
+    name: secretos (gitleaks)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Instalar gitleaks 8.30.1 (SHA-256 fijado)
+        run: |
+          curl -fsSL -o gitleaks.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tgz" | sha256sum -c -
+          tar -xzf gitleaks.tgz gitleaks
+      - name: Escaneo de todo el historial
+        run: ./gitleaks git --redact --no-banner --exit-code 1 .
 
   update-check:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'

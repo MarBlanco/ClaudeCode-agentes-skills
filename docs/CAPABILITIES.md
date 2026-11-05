@@ -1,6 +1,6 @@
 # Capacidades del Harness: matriz, fuentes y controles
 
-Estado al 2026-11-01 · harness-core 0.11.4 · harness-web 0.12.4 · harness-saas 0.1.1 · harness-payments 0.9.1.
+Estado al 2026-11-05 · harness-core 0.12.2 · harness-web 0.12.6 · harness-saas 0.1.1 · harness-payments 0.9.2 · harness-research 0.1.1. Las versiones vigentes se verifican con `npm run check:consistency` (marketplace ↔ plugin.json ↔ `harness.lock.json` ↔ CHANGELOG).
 
 ## 1. Arquitectura
 
@@ -12,7 +12,8 @@ Estado al 2026-11-01 · harness-core 0.11.4 · harness-web 0.12.4 · harness-saa
             systematic-debugging · ops-delivery · tech-docs · maintenance-upgrades
     agentes: code-reviewer (lectura) · qa-verifier (sin edición)
     hooks:  guard (secretos, lockfiles, migraciones, git, producción) + agent-policy
-            session-start (perfil, gates, capacidades) · quality (typecheck, formato)
+            session-start (perfil, gates, capacidades) · router (capacidades y modelo por pedido)
+            continuity (estado de sesión) · qa-complete (entregables) · quality (typecheck, formato)
   plugins de módulo (instalados, deshabilitados; el proyecto los habilita):
     harness-web      frontend, diseño, QA web, qa-explorer, SEO, OWASP
     harness-saas     SaaS multi-tenant, APIs, datos y migraciones, PostgreSQL
@@ -23,7 +24,7 @@ Estado al 2026-11-01 · harness-core 0.11.4 · harness-web 0.12.4 · harness-saa
 
 Flujo: `product-spec → architecture-decisions → (capacidades de diseño) → harness-plan → harness-work (implementa → qa-verifier → code-reviewer → reparación ≤3) → ops-delivery / tech-docs`. Enrutador por fase: `plugins/harness-core/skills/harness-plan/references/capabilities.md`.
 
-## 2. Matriz de las 22 capacidades
+## 2. Matriz de capacidades (22 originales y 3 posteriores)
 
 Leyenda de verificación: **R** registro (Claude Code 2.1.288 lista la skill/agente en una sesión headless) · **I** invocación real en una tarea · **T** tests automatizados · **H** herramienta ejecutada contra archivos reales · **E** heredado de versiones anteriores, no vuelto a probar en esta tarea.
 
@@ -51,15 +52,18 @@ Leyenda de verificación: **R** registro (Claude Code 2.1.288 lista la skill/age
 | 20 | Observabilidad | `ops-delivery/references/observability.md` | original | Implementada (solo guía) | Sin herramienta ni prueba ejecutable; las skills de OpenTelemetry quedan como opción |
 | 21 | Documentación técnica | `tech-docs` | original | Implementada | R |
 | 22 | Mantenimiento | `maintenance-upgrades`, `harness-update-check`, Dependabot | original | Implementada | R; `update-check` verificado (lee las fuentes upstream y detecta Claude Code 2.1.316 y `@playwright/cli` 0.1.23 disponibles) |
+| 23 | Investigación y datos | `harness-research` (7 skills, agente `market-researcher`) | Anthropic (Apache-2.0, 5 vendorizadas) + original | Implementada | R y `check:skills`. No hay en este repositorio una investigación real ejecutada de punta a punta como prueba |
+| 24 | Memoria y continuidad entre sesiones | `memory-policy`, `scripts/memory-lint.mjs`, `continuity.mjs` | original sobre la memoria nativa de Claude Code | Implementada | T: 7 tests de continuidad (estado, interrupción, compactación) y 3 del linter. Los hooks no se probaron en una sesión interactiva real; el efecto sobre el uso de tokens no está medido (ADR-018) |
+| 25 | Modelo por tarea | `router.mjs` (`modelHint`), `harness-work/references/model-routing.md`, modelos fijados por agente | original | Implementada como **sugerencia** | T. Un hook no puede cambiar el modelo: el modelo principal decide si delega con `model=`. Ahorro no medido |
 
 ## 3. Inventario
 
 | Tipo | Elementos |
 |---|---|
-| Plugins del harness | `harness-core` 0.10.1 · `harness-web` 0.11.0 · `harness-saas` 0.1.0 · `harness-payments` 0.9.1 |
-| Skills (28) | core: harness-plan, harness-work, harness-review, systematic-debugging, product-spec, architecture-decisions, ops-delivery, tech-docs, maintenance-upgrades · web: frontend-design, design-loop, web-design-guidelines, vercel-react-best-practices, vercel-composition-patterns, playwright-cli, chrome-devtools, web-qa, qa-explore, seo, owasp-security · saas: saas-architecture, api-design, data-modeling-migrations, supabase-postgres-best-practices · payments: payments-core, payments-review · repo: skill-creator, skill-development |
-| Agentes | `code-reviewer`, `qa-verifier` (core) · `qa-explorer` (web) · `payments-engineer` (payments). No se agregaron más: las capacidades nuevas son metodología, no roles independientes |
-| Hooks (harness-core) | `guard.mjs` (PreToolUse), `agent-policy.mjs` (llamado desde el guard), `session-start.mjs`, `quality.mjs` (PostToolUse formato; Stop typecheck) |
+| Plugins del harness | `harness-core` 0.12.2 · `harness-web` 0.12.6 · `harness-saas` 0.1.1 · `harness-payments` 0.9.2 · `harness-research` 0.1.1 |
+| Skills (36 en total, verificadas por `check:skills`) | core (10): harness-plan, harness-work, harness-review, systematic-debugging, product-spec, architecture-decisions, ops-delivery, tech-docs, maintenance-upgrades, memory-policy · web: frontend-design, design-loop, web-design-guidelines, vercel-react-best-practices, vercel-composition-patterns, playwright-cli, chrome-devtools, web-qa, qa-explore, seo, owasp-security · saas: saas-architecture, api-design, data-modeling-migrations, supabase-postgres-best-practices · payments: payments-core, payments-review · research (7): market-research, web-research, competitive-brief, campaign-plan, product-brainstorming, statistical-analysis, validate-data · repo (no se distribuyen): skill-creator, skill-development |
+| Agentes | `code-reviewer`, `qa-verifier` (core) · `qa-explorer` (web) · `payments-engineer` (payments) · `market-researcher` (research). No se agregaron más: las capacidades nuevas son metodología, no roles independientes |
+| Hooks (harness-core) | `guard.mjs` (PreToolUse), `agent-policy.mjs` (llamado desde el guard), `session-start.mjs`, `router.mjs` (UserPromptSubmit), `continuity.mjs` (SessionStart, UserPromptSubmit, Stop, SessionEnd), `qa-complete.mjs` (SubagentStop), `quality.mjs` (PostToolUse formato; Stop typecheck) |
 | MCP | chrome-devtools (usuario), codebase-memory (usuario, opcional), next-devtools (por perfil), mercadopago (proyecto), context7 (requiere autorización del usuario) |
 | CLI | gitleaks 8.30.1, osv-scanner 2.7.0, actionlint 1.7.12, hadolint 2.15.1 (todos con SHA-256 verificado), `@playwright/cli` 0.1.22, Node ≥ 22 |
 
@@ -125,6 +129,23 @@ Falso positivo de `.license.key`: corregido. Una palabra con forma de ruta de pr
 | Instalador de herramientas (4 binarios) | SHA-256 verificado, `-Status` correcto |
 
 **Conclusión sobre activación:** las skills se cargan de forma fiable cuando una tarea pasa por `harness-plan`/`harness-work` o se invocan por nombre; en preguntas cortas el modelo puede no usarlas. El anuncio de SessionStart lo recuerda pero no lo garantiza.
+
+## 6b. Pruebas ejecutadas (2026-11-05)
+
+Resultados observados en esta fecha, sobre el árbol de trabajo (no se citan cifras de CI sin una ejecución concreta):
+
+| Prueba | Resultado |
+|---|---|
+| `npm test` en Windows 10 · Node 24 | 112 pasan, 0 fallan |
+| `npm test` en Ubuntu (WSL2) · Node 24.22 | 112 pasan, 0 fallan |
+| `npm run check:skills` | 36 skills, nombres únicos, referencias existentes |
+| `npm run check:consistency` | versiones, hooks, agentes, privacidad y licencia coherentes |
+| `npm run validate` (`--strict`) | marketplace y 5 plugins aprobados |
+| `npm run demo:sync` | dry-run sin escritura, apply, re-apply idempotente, conflicto rechazado sin escribir y rollback byte a byte (Windows y Ubuntu) |
+| `npm run demo:qa` | 18 specs en dos corridas idénticas: 7 recorridos pasan, 11 specs de defectos fallan por los defectos sembrados |
+| gitleaks sobre el historial y el árbol | sin hallazgos |
+
+**Defecto real encontrado al correr en Linux:** el guard y SyncProject usaban `path.basename`/`isAbsolute` de la plataforma, que en Linux no tratan `C:\\...` como ruta de Windows; tres tests de seguridad fallaban en el CI de GitHub (`.env` con ruta de Windows no se detectaba como secreto). Corregido (separadores de ambos sistemas) y cubierto por los mismos tests.
 
 ## 7. Fase final de endurecimiento (2026-11-01)
 
