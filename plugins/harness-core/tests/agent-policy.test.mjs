@@ -42,12 +42,12 @@ test('permite el flujo de navegación desde la corrida', () => {
     "playwright-cli -s=qa-x fill e5 'a;b|c && d $x `y`' --submit",
     'playwright-cli -s=qa-x click e3 && playwright-cli -s=qa-x snapshot > logs/a.txt',
     'playwright-cli -s=qa-x resize 375 812',
-    'playwright-cli -s=qa-x close',
     "playwright-cli -s=qa-x --raw eval 'document.title' > logs/t.txt",
     'playwright-cli --json -s=qa-x snapshot',
     'playwright-cli -s=qa-x fill e5 -2',
     'playwright-cli -s=qa-x mousewheel 0 800',
     'playwright-cli -s=qa-x mousewheel 0 -800',
+    'playwright-cli -s=qa-x close',
   ]) assert.equal(bash(cmd), 'allow', cmd);
   for (const cmd of ['playwright-cli -s=qa-x --raw -s=b install', 'playwright-cli -s=qa-x fill e5 -x', 'playwright-cli --raw']) assert.equal(bash(cmd), 'deny', cmd);
   assert.equal(bash('cd ./.harness/qa/20261101-x && playwright-cli -s=q snapshot > logs/a.txt', { cwd: root }), 'allow');
@@ -235,4 +235,29 @@ test('re-revisión: un solo -s=, sin --session ni repetidos (playwright-cli prio
     assert.equal(bash(cmd), 'deny', cmd);
   }
   assert.equal(bash('playwright-cli -s=q snapshot'), 'allow');
+});
+
+// --- revisión de seguridad 2026-11-05: paridad de rutas de escritura, config local y registro de sesiones ---
+test('configuración de Playwright no se puede escribir por Write, redirección ni --filename', () => {
+  assert.equal(decide('Write', { file_path: join(run, '.playwright', 'cli.config.json'), content: '{}' }), 'deny');
+  assert.equal(decide('Write', { file_path: join(run, 'cli.config.json'), content: '{}' }), 'deny');
+  assert.equal(bash('playwright-cli -s=qa-x console error > .playwright/cli.config.json'), 'deny');
+  assert.equal(bash('playwright-cli -s=qa-x console error > package.json'), 'deny');
+  assert.equal(bash('playwright-cli -s=qa-x screenshot --filename=.playwright/cli.config.json'), 'deny');
+  assert.equal(bash('playwright-cli -s=e2e screenshot --filename=screenshots/ok.png'), 'allow');
+});
+
+test('open se deniega si existe .playwright/cli.config.json en la corrida o en un padre', () => {
+  mkdirSync(join(run, '.playwright'), { recursive: true });
+  writeFileSync(join(run, '.playwright', 'cli.config.json'), '{}');
+  assert.equal(bash(`playwright-cli -s=nuevo open --config='${cfg()}' http://127.0.0.1:4317/`), 'deny');
+  rmSync(join(run, '.playwright'), { recursive: true, force: true });
+  assert.equal(bash(`playwright-cli -s=nuevo open --config='${cfg()}' http://127.0.0.1:4317/`), 'allow');
+});
+
+test('close elimina la sesión del registro: no se puede seguir manejándola', () => {
+  assert.equal(bash(`playwright-cli -s=cierre open --config='${cfg()}'`), 'allow');
+  assert.equal(bash('playwright-cli -s=cierre snapshot'), 'allow');
+  assert.equal(bash('playwright-cli -s=cierre close'), 'allow');
+  assert.equal(bash('playwright-cli -s=cierre snapshot'), 'deny');
 });

@@ -3,8 +3,8 @@
   "schema": 1,
   "verifiedAt": "2026-11-01",
   "components": [
-    { "id": "harness-core", "type": "plugin", "scope": "user", "source": { "kind": "local", "path": "plugins/harness-core" }, "version": "0.12.0", "license": "Apache-2.0", "criticality": "critical", "test": "node --test plugins/harness-core/tests/*.test.mjs" },
-    { "id": "harness-web", "type": "plugin", "scope": "project", "source": { "kind": "local", "path": "plugins/harness-web" }, "version": "0.12.5", "license": "Apache-2.0", "criticality": "normal", "test": "node scripts/check-skills.mjs && node --test plugins/harness-web/tests/*.test.mjs" },
+    { "id": "harness-core", "type": "plugin", "scope": "user", "source": { "kind": "local", "path": "plugins/harness-core" }, "version": "0.12.1", "license": "Apache-2.0", "criticality": "critical", "test": "node --test plugins/harness-core/tests/*.test.mjs" },
+    { "id": "harness-web", "type": "plugin", "scope": "project", "source": { "kind": "local", "path": "plugins/harness-web" }, "version": "0.12.6", "license": "Apache-2.0", "criticality": "normal", "test": "node scripts/check-skills.mjs && node --test plugins/harness-web/tests/*.test.mjs" },
     { "id": "harness-saas", "type": "plugin", "scope": "project", "source": { "kind": "local", "path": "plugins/harness-saas" }, "version": "0.1.1", "license": "Apache-2.0", "criticality": "normal", "test": "node scripts/check-skills.mjs" },
     { "id": "harness-payments", "type": "plugin", "scope": "project", "source": { "kind": "local", "path": "plugins/harness-payments" }, "version": "0.9.1", "license": "Apache-2.0", "criticality": "critical", "test": "node --test plugins/harness-payments/tests/*.test.mjs" },
     { "id": "harness-research", "type": "plugin", "scope": "user", "source": { "kind": "local", "path": "plugins/harness-research" }, "version": "0.1.1", "license": "Apache-2.0 (skills vendorizadas con su licencia, ver NOTICE.md)", "criticality": "normal", "test": "node scripts/check-skills.mjs" },
@@ -18,7 +18,7 @@
     { "id": "typescript-lsp", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "typescript-lsp@claude-plugins-official" }, "version": "1.0.0", "license": "Apache-2.0", "criticality": "normal" },
     { "id": "context7", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "context7@claude-plugins-official" }, "version": "a7ba5b93db0c", "license": "MIT", "criticality": "normal", "notes": "Su MCP requiere autenticación del usuario (/mcp)." },
     { "id": "pr-review-toolkit", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "pr-review-toolkit@claude-plugins-official" }, "version": "1.0.1", "license": "Apache-2.0", "criticality": "normal" },
-    { "id": "claude-security", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "claude-security@claude-plugins-official" }, "version": "0.12.0", "license": "LicenseRef-Anthropic", "criticality": "normal" },
+    { "id": "claude-security", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "claude-security@claude-plugins-official" }, "version": "0.12.1", "license": "LicenseRef-Anthropic", "criticality": "normal" },
     { "id": "mercadopago", "type": "plugin", "scope": "project", "source": { "kind": "claude-plugin", "plugin": "mercadopago@claude-plugins-official", "repo": "mercadopago/mercadopago-claude-marketplace" }, "version": "4.3.2", "license": "Apache-2.0", "criticality": "critical", "test": "hooks probados en Windows 31-10-2026 (python3 + bash de Git)" },
     { "id": "caveman", "type": "plugin", "scope": "user", "source": { "kind": "claude-plugin", "plugin": "caveman@caveman", "repo": "JuliusBrussee/caveman" }, "version": "4.0.1", "license": "Apache-2.0", "criticality": "normal" },
 

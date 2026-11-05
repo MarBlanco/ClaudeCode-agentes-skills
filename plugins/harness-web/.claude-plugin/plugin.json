@@ -1,6 +1,6 @@
 {
   "name": "harness-web",
-  "version": "0.12.5",
+  "version": "0.12.6",
   "description": "Módulo web del harness: diseño frontend, design-loop, guías de interfaz, buenas prácticas React/Next de Vercel, Playwright CLI, Chrome DevTools, QA exploratoria (qa-explore + agente qa-explorer), SEO, revisión de seguridad OWASP y plantillas de QA web (visual, accesibilidad, performance).",
   "author": {
     "name": "Martin Blanco"

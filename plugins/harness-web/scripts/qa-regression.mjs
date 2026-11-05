@@ -90,7 +90,8 @@ const configModule = (c) => `export default ${JSON.stringify(c, null, 2)};\n`;
 
 function findRunner(project, explicit) {
   const candidates = [explicit, project, process.env.HARNESS_QA_RUNNER, join(homedir(), '.claude', 'harness', 'qa-runner')].filter(Boolean);
-  return candidates.map((c) => resolve(c)).find((c) => existsSync(join(c, 'node_modules', '@playwright', 'test', 'cli.js')));
+  // Un runner dentro de .harness/qa lo habría podido escribir el agente: nunca es confiable.
+  return candidates.map((c) => resolve(c)).filter((c) => !/[\/].harness[\/]qa([\/]|$)/.test(c)).find((c) => existsSync(join(c, 'node_modules', '@playwright', 'test', 'cli.js')));
 }
 
 export function summarize(results) {

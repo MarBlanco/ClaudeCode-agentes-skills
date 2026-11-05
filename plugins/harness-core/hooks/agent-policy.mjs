@@ -64,6 +64,11 @@ export function inRun(p, cwd) {
   return RUN_NAME.test(abs.slice(base.length + 1).split('/')[0]);
 }
 
+const MODULE_CONFIG = /(^|[\\/])\.playwright([\\/]|$)|(^|[\\/])node_modules([\\/]|$)|(^|[\\/])(package\.json|package-lock\.json|tsconfig[^\\/]*\.json|jsconfig\.json|\.npmrc|\.yarnrc[^\\/]*|playwright\.config\.[cm]?[jt]s|babel\.config\.[cm]?js|\.babelrc|cli\.config[^\\/]*\.json)$/i;
+
+// Escribible por el agente: dentro de la corrida y que no cambie cómo Node/Playwright resuelven módulos o configuración.
+const writable = (p, cwd) => !MODULE_CONFIG.test(String(p ?? '')) && inRun(p, cwd);
+
 const allowedHosts = () => String(process.env.HARNESS_QA_ALLOWED_HOSTS ?? '').split(',').map((h) => h.trim().toLowerCase()).filter((h) => /^[a-z0-9.-]+$/.test(h));
 
 // Configuración de navegador del harness (formato de config de playwright-cli / Playwright MCP).
@@ -102,6 +107,14 @@ function recordSession(name, config) {
   const all = readSessions();
   all[name] = { config, at: new Date().toISOString() };
   mkdirSync(harnessDir(), { recursive: true });
+  writeFileSync(`${sessionsFile()}.tmp`, JSON.stringify(all, null, 2));
+  renameSync(`${sessionsFile()}.tmp`, sessionsFile());
+}
+
+function forgetSession(name) {
+  const all = readSessions();
+  if (!(name in all)) return;
+  delete all[name];
   writeFileSync(`${sessionsFile()}.tmp`, JSON.stringify(all, null, 2));
   renameSync(`${sessionsFile()}.tmp`, sessionsFile());
 }
@@ -266,7 +279,7 @@ function checkCli(t, st) {
   const isFlag = (x) => x.startsWith('-') && !/^-\d+(\.\d+)?$/.test(x); // "-2" es un valor (fill, mousewheel)
   for (const a of args.filter(isFlag)) {
     if (a.startsWith('--filename=')) {
-      if (!inRun(a.slice(11), st.cwd)) return `--filename debe apuntar dentro de .harness/qa/<corrida>/: ${a}`;
+      if (!writable(a.slice(11), st.cwd)) return `--filename debe apuntar dentro de .harness/qa/<corrida>/: ${a}`;
     } else if (a.startsWith('--config=') && sub === 'open') {
       config = a.slice(9);
     } else if (!CLI_FLAG.test(a)) {
@@ -276,6 +289,10 @@ function checkCli(t, st) {
   if (sub === 'open') {
     // Una config global de playwright-cli se fusiona con la nuestra y podría reintroducir cdpEndpoint, initScript, etc.
     if (existsSync(join(homedir(), '.playwright', 'cli.config.json'))) return 'Existe ~/.playwright/cli.config.json: se fusionaría con la configuración del harness. Quitarla antes de usar qa-explorer.';
+    for (let d = resolve(st.cwd), root = resolve(projectRoot(st.cwd)); ; d = dirname(d)) {
+      if (existsSync(join(d, '.playwright', 'cli.config.json'))) return `Existe ${join(d, '.playwright', 'cli.config.json')}: se fusionaría con la configuración del harness. Quitarla antes de usar qa-explorer.`;
+      if (d === root || dirname(d) === d) break;
+    }
     const required = ensureBrowserConfig();
     if (!config || slash(toAbs(config, st.cwd)) !== slash(required)) {
       return `playwright-cli open exige la configuración de navegador del harness (red limitada a localhost): agregar --config='${required.replace(/\\/g, '/')}'`;
@@ -284,6 +301,7 @@ function checkCli(t, st) {
   } else if (sub !== 'list' && readSessions()[session]?.config !== ensureBrowserConfig()) {
     return `La sesión "${session}" no fue abierta con la configuración del harness: abrirla con playwright-cli -s=${session} open --config=...`;
   }
+  if (sub === 'close') forgetSession(session);
   const pos = args.filter((a) => !isFlag(a));
   if (CLI_URL.has(sub)) for (const u of pos) { const bad = urlProblem(u); if (bad) return bad; }
   if (sub === 'upload' && pos.some((p) => !inRun(p, st.cwd))) return 'upload: solo archivos dentro de la corrida';
@@ -293,7 +311,7 @@ function checkCli(t, st) {
 function checkSegment(seg, index, st) {
   for (const r of seg.redirects) {
     if (/^(\/dev\/null|nul)$/i.test(r.target)) continue;
-    if (!inRun(r.target, st.cwd)) return `Redirección fuera de .harness/qa/<corrida>/: ${r.target}`;
+    if (!writable(r.target, st.cwd)) return `Redirección fuera de .harness/qa/<corrida>/: ${r.target}`;
   }
   const t = seg.tokens;
   if (!t.length) return null;
@@ -302,7 +320,6 @@ function checkSegment(seg, index, st) {
   return `Comando no permitido para qa-explorer: ${t[0]}. ${ALLOWED}.`;
 }
 
-const MODULE_CONFIG = /(^|[\\/])node_modules([\\/]|$)|(^|[\\/])(package\.json|package-lock\.json|tsconfig[^\\/]*\.json|jsconfig\.json|\.npmrc|\.yarnrc[^\\/]*|playwright\.config\.[cm]?[jt]s|babel\.config\.[cm]?js|\.babelrc)$/i;
 
 export function evaluateExplorer(tool, ti, cwd) {
   if (['Edit', 'Write', 'MultiEdit', 'NotebookEdit'].includes(tool)) {
@@ -311,7 +328,7 @@ export function evaluateExplorer(tool, ti, cwd) {
     if (MODULE_CONFIG.test(String(p ?? ''))) {
       return ['deny', `qa-explorer no puede escribir configuración de módulos o de Playwright: ${p}`];
     }
-    return inRun(p, cwd) ? null : ['deny', `qa-explorer solo escribe dentro de .harness/qa/<AAAAMMDD-...>/: ${p ?? '(sin ruta)'}`];
+    return writable(p, cwd) ? null : ['deny', `qa-explorer solo escribe dentro de .harness/qa/<AAAAMMDD-...>/: ${p ?? '(sin ruta)'}`];
   }
   if (tool !== 'Bash') return null;
   try {

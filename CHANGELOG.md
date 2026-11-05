@@ -1,5 +1,12 @@
 # Changelog
 
+## harness-core 0.12.1 · harness-web 0.12.6 — 2026-11-05 (revisión de seguridad automática)
+
+### Seguridad
+- `agent-policy.mjs`: la configuración de Playwright (`.playwright/`, `cli.config*.json`) y los archivos de módulos ya no se pueden escribir por Write, redirección de Bash ni `--filename` (antes solo Write); `open` se deniega si existe `.playwright/cli.config.json` en la corrida o en un directorio padre hasta la raíz del proyecto; `close` elimina la sesión del registro.
+- `qa-regression.mjs`: nunca usa como runner una carpeta dentro de `.harness/qa`.
+- 3 tests nuevos (104 en total). Limitación sin cambios: no es un sandbox de sistema operativo.
+
 ## harness-core 0.12.0 · harness-web 0.12.5 · harness-research 0.1.1 — 2026-11-05 (memoria, continuidad y modelo por tarea)
 
 ### Nuevo
