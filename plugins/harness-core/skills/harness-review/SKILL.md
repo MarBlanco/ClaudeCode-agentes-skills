@@ -54,6 +54,11 @@ Revisar:
 - manejo de errores;
 - tests relevantes.
 
+### Traceability and docs
+- si existe una spec (`product-spec`), cada criterio `AC-n` está cubierto por una prueba o evidencia citada;
+- documentación afectada actualizada (`tech-docs`): comandos, variables de entorno, contratos;
+- decisiones de arquitectura registradas (ADR) cuando se cambió estructura.
+
 ### Scope
 - cambios fuera del objetivo;
 - archivos modificados innecesariamente;

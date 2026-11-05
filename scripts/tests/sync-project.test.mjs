@@ -243,3 +243,7 @@ test('seguridad: el manifiesto no puede hacer borrar rutas ajenas; rollback rech
     assert.equal(readFileSync(victim, 'utf8'), 'no borrar');
   } finally { cleanup(dir); cleanup(outside); }
 });
+
+test('ruta de proyecto inexistente: error claro (no "Falta --profile")', () => {
+  assert.throws(() => plan(join(tmpdir(), 'harness-no-existe-' + Date.now())), /No existe el proyecto/);
+});

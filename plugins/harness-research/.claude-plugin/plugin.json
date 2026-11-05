@@ -1,0 +1,7 @@
+{
+  "name": "harness-research",
+  "version": "0.1.1",
+  "description": "Investigación e inteligencia de producto: investigación de mercado y web con niveles de evidencia, inteligencia competitiva, estrategia de producto y marketing, análisis y validación de datos. Incluye skills de Anthropic (knowledge-work-plugins, Apache-2.0) y el agente market-researcher.",
+  "author": { "name": "Martin Blanco" },
+  "keywords": ["harness", "research", "market-research", "competitive-intelligence", "product-strategy", "marketing", "data-analysis"]
+}

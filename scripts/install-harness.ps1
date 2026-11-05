@@ -181,5 +181,5 @@ if ($Marketplace) {
         Write-Host "Instalando harness-core (scope user)..."
         if (-not $DryRun) { & claude plugin install harness-core@harness --scope user; if ($LASTEXITCODE -ne 0) { throw "FALLO: plugin install" } }
     }
-    Write-Host "harness-web y harness-payments se activan por proyecto con scripts/sync-project.ps1. Reiniciar Claude Code."
+    Write-Host "harness-web, harness-saas y harness-payments se instalan deshabilitados a nivel usuario (ver README) y se activan por proyecto con scripts/sync-project.ps1. Reiniciar Claude Code."
 }

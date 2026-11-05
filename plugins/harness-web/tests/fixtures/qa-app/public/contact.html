@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/style.css">
+<title>Contacto · Tienda QA</title>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">Tienda QA</a>
+  <nav aria-label="Principal">
+    <a href="/">Inicio</a>
+    <a href="/cart.html">Carrito (<span data-cart-count>0</span>)</a>
+    <a href="/contact.html">Contacto</a>
+    <a href="/about.html">Nosotros</a>
+  </nav>
+</header>
+<main>
+  <h1>Contacto</h1>
+  <form data-contact novalidate>
+    <label>Nombre <input name="name" required></label>
+    <label>Email <input name="email" type="text"></label>
+    <label>Mensaje <textarea name="message" required></textarea></label>
+    <button type="submit">Enviar</button>
+  </form>
+  <p class="notice" data-sent hidden role="status"></p>
+</main>
+<script type="module">
+  const form = document.querySelector('[data-contact]');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await fetch('/api/contact', { method: 'POST', body: new FormData(form) }).catch(() => {});
+    const out = document.querySelector('[data-sent]');
+    out.textContent = '¡Gracias! Te responderemos pronto.';
+    out.hidden = false;
+    form.reset();
+  });
+</script>
+</body>
+</html>

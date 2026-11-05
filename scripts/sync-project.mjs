@@ -355,6 +355,7 @@ function legacyCopies(project) {
 
 export function plan(project, { profile: profileName, modules = [], retireLegacy = false } = {}) {
   project = resolve(project);
+  if (!existsSync(project)) throw new Error(`No existe el proyecto: ${project}`);
   const p = paths(project);
   const prev = existsSync(p.manifest) ? JSON.parse(readFileSync(p.manifest, 'utf8')) : null;
   const name = profileName ?? prev?.profile;

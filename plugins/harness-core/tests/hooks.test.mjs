@@ -70,6 +70,24 @@ test('secretos: comandos de shell', () => {
   }
 });
 
+test('secretos: una ruta de propiedades jq (.license.key) no es una clave salvo que exista ese archivo', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'harness-jq-'));
+  try {
+    const jq = 'gh api repos/x/y --jq \'"\\(.license.key // "none")"\'';
+    assert.equal(secretInCommand(jq, dir), null);
+    assert.equal(decide('Bash', { command: jq }, dir), 'allow');
+    // Las claves reales siguen bloqueadas
+    for (const c of ['cat server.key', 'cat certs/tls.pem', 'cp id_rsa /tmp', 'cat ./.license.key', 'cat .license.key', 'cd certs && cat .tls.key', 'gh api x --jq .license.key', 'cd certs && a=(.tls.key) && cat x']) assert.ok(secretInCommand(c, dir), c);
+    writeFileSync(join(dir, '.license.key'), 'x');
+    assert.ok(secretInCommand('cat .license.key', dir), 'archivo existente con forma de ruta de propiedades');
+    // .env* no se relaja aunque no exista
+    assert.ok(secretInCommand('echo x > .env.local', dir));
+    assert.ok(secretInCommand('cat .env.production', dir));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('lockfiles: edición manual bloqueada, gestor de paquetes permitido', () => {
   assert.equal(decide('Edit', { file_path: 'package-lock.json' }), 'deny');
   assert.equal(decide('Write', { file_path: 'apps/web/pnpm-lock.yaml' }), 'deny');
@@ -192,6 +210,8 @@ test('session-start: anuncia perfil solo si hay manifiesto', () => {
     assert.match(out, /perfil test/);
     assert.match(out, /Typecheck en Stop: npx tsc -b$/m);
     assert.doesNotMatch(out, /\[object Object\]/);
+    assert.match(out, /Capacidades: harness-core: product-spec/);
+    assert.doesNotMatch(out, /harness-saas:/); // solo los módulos del manifiesto
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

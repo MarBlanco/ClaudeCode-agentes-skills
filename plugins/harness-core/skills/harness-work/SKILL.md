@@ -70,9 +70,13 @@ Si TEST o REVIEW devuelven problemas:
 
 No ignorar findings críticos o importantes.
 
+## Modelo por tarea
+
+Elegir el modelo más barato que alcance y escalar por evidencia: ver `references/model-routing.md`. Delegar búsquedas amplias a un subagente barato en vez de leer en el hilo principal.
+
 ## Estado recuperable
 
-Mantener `.harness/state.md` (gitignored) al cerrar cada fase: objetivo, plan, fase actual, gates y resultado, ciclo de reparación (n/3), próximos pasos. Permite reanudar tras compactar o con `--continue`.
+Mantener `.harness/state.md` (gitignored) al cerrar cada fase: objetivo, plan, fase actual, gates y resultado, ciclo de reparación (n/3), próximos pasos. Permite reanudar tras compactar o con `--continue`; el hook `continuity.mjs` lo señala al iniciar si la sesión previa quedó interrumpida.
 
 ## Límites
 

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/style.css">
+<title>Pago · Tienda QA</title>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">Tienda QA</a>
+  <nav aria-label="Principal">
+    <a href="/">Inicio</a>
+    <a href="/cart.html">Carrito (<span data-cart-count>0</span>)</a>
+    <a href="/contact.html">Contacto</a>
+    <a href="/about.html">Nosotros</a>
+  </nav>
+</header>
+<main>
+  <h1>Pago</h1>
+  <p>Pago con tarjeta. Se debita al confirmar.</p>
+  <form data-pay>
+    <label>Titular <input name="holder" required></label>
+    <label>Número de tarjeta <input name="card" inputmode="numeric" required></label>
+    <button type="submit">Pagar ahora</button>
+  </form>
+  <p class="notice" data-result hidden role="status"></p>
+</main>
+<script type="module">
+  const form = document.querySelector('[data-pay]');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const res = await fetch('/api/pay', { method: 'POST', body: new FormData(form) });
+    const data = await res.json();
+    const out = document.querySelector('[data-result]');
+    out.textContent = 'Pago ' + data.status;
+    out.hidden = false;
+  });
+</script>
+</body>
+</html>

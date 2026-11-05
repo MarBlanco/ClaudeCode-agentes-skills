@@ -32,3 +32,4 @@ Se instalan como devDependencies del proyecto con su gestor (`npm i -D ...`). No
 - Datos de prueba deterministas: congelar fechas, mockear red externa con `page.route`, ocultar contenido dinámico con la opción `mask`.
 - Sin credenciales reales en tests. Usuarios de prueba locales o mocks.
 - Revisión en Chrome real (consola, red, captura) con la skill `chrome-devtools` complementa G4; no la reemplaza.
+- Specs generados por `qa-explore` en `.harness/qa/<run>/regression/`: revisarlos y moverlos al directorio E2E del proyecto solo con aprobación del usuario; desde ahí cuentan para G3.

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/style.css">
+<title>Tienda QA</title>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">Tienda QA</a>
+  <nav aria-label="Principal">
+    <a href="/">Inicio</a>
+    <a href="/cart.html">Carrito (<span data-cart-count>0</span>)</a>
+    <a href="/contact.html">Contacto</a>
+    <a href="/about.html">Nosotros</a>
+  </nav>
+</header>
+<main>
+  <h1>Regalos hechos a mano</h1>
+  <div class="promo">Envío gratis en compras mayores a $ 5.000 durante todo el mes de noviembre.</div>
+  <h2>Productos</h2>
+  <ul class="products" data-products><li>Cargando…</li></ul>
+  <section aria-labelledby="nl">
+    <h2 id="nl">Newsletter</h2>
+    <form data-newsletter onsubmit="return false">
+      <label>Email <input name="email" type="email" required></label>
+      <button type="button">Suscribirme</button>
+    </form>
+  </section>
+</main>
+<script type="module">
+  import { money } from '/app.js';
+  const res = await fetch('/api/products');
+  const products = await res.json();
+  document.querySelector('[data-products]').innerHTML = products
+    .map((p) => `<li><h3>${p.name}</h3><p>${money(p.price)}</p><a href="/product.html?id=${p.id}">Ver producto</a></li>`)
+    .join('');
+</script>
+<script>
+  window.analytics.track('home_view');
+</script>
+</body>
+</html>

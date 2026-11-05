@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/style.css">
+<title>Carrito · Tienda QA</title>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">Tienda QA</a>
+  <nav aria-label="Principal">
+    <a href="/">Inicio</a>
+    <a href="/cart.html">Carrito (<span data-cart-count>0</span>)</a>
+    <a href="/contact.html">Contacto</a>
+    <a href="/about.html">Nosotros</a>
+  </nav>
+</header>
+<main>
+  <h1>Carrito</h1>
+  <div data-cart></div>
+</main>
+<script type="module">
+  import { getCart, cartTotal, money, renderCartCount } from '/app.js';
+  function render() {
+    const cart = getCart();
+    const box = document.querySelector('[data-cart]');
+    if (!cart.length) {
+      box.innerHTML = '<p>Tu carrito está vacío.</p><a href="/">Seguir comprando</a>';
+      return;
+    }
+    box.innerHTML = `<table><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th></tr></thead><tbody>${cart
+      .map((l) => `<tr><td>${l.name}</td><td>${l.qty}</td><td>${money(l.price)}</td></tr>`)
+      .join('')}</tbody></table>
+      <p><strong>Total: <span data-total>${money(cartTotal(cart))}</span></strong></p>
+      <button type="button" data-clear>Vaciar carrito</button>
+      <a href="/checkout.html">Ir a pagar</a>`;
+    box.querySelector('[data-clear]').addEventListener('click', () => {
+      localStorage.removeItem('qa-app-cart');
+      renderCartCount();
+      render();
+    });
+  }
+  render();
+</script>
+</body>
+</html>

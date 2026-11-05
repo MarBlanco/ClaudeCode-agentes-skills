@@ -1,0 +1,7 @@
+{
+  "name": "harness-saas",
+  "version": "0.1.1",
+  "description": "Módulo SaaS y backend del harness: arquitectura SaaS (multi-tenancy, autenticación, autorización, planes), diseño de APIs y webhooks, modelado y migraciones de datos, y buenas prácticas de PostgreSQL (Supabase).",
+  "author": { "name": "Martin Blanco" },
+  "keywords": ["harness", "saas", "multi-tenant", "api", "postgres", "migrations"]
+}

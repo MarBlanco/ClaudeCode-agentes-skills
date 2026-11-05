@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/style.css">
+<title>Producto · Tienda QA</title>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">Tienda QA</a>
+  <nav aria-label="Principal">
+    <a href="/">Inicio</a>
+    <a href="/cart.html">Carrito (<span data-cart-count>0</span>)</a>
+    <a href="/contact.html">Contacto</a>
+    <a href="/about.html">Nosotros</a>
+  </nav>
+</header>
+<main>
+  <div data-product>Cargando…</div>
+</main>
+<script type="module">
+  import { addToCart, money } from '/app.js';
+  const id = new URLSearchParams(location.search).get('id');
+  const box = document.querySelector('[data-product]');
+  const res = await fetch('/api/products/' + id);
+  if (!res.ok) {
+    box.innerHTML = '<h1>Producto no encontrado</h1><a href="/">Volver al inicio</a>';
+  } else {
+    const p = await res.json();
+    box.innerHTML = `<h1>${p.name}</h1><p data-price>${money(p.price)}</p>
+      <label>Cantidad <input type="number" min="1" max="10" value="1" data-qty></label>
+      <button type="button" data-add>Agregar al carrito</button>
+      <p class="notice" data-added hidden role="status">Agregado al carrito</p>`;
+    box.querySelector('[data-add]').addEventListener('click', () => {
+      const qty = Number(box.querySelector('[data-qty]').value);
+      addToCart(p, qty);
+      box.querySelector('[data-added]').hidden = false;
+    });
+  }
+</script>
+</body>
+</html>

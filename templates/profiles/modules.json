@@ -1,5 +1,19 @@
 {
   "$comment": "Módulos del harness: qué plugins habilita cada uno en el proyecto (enabledPlugins).",
-  "web": { "enabledPlugins": { "harness-web@harness": true } },
-  "payments": { "enabledPlugins": { "harness-payments@harness": true, "mercadopago@claude-plugins-official": true } }
+  "web": {
+    "enabledPlugins": {
+      "harness-web@harness": true
+    }
+  },
+  "payments": {
+    "enabledPlugins": {
+      "harness-payments@harness": true,
+      "mercadopago@claude-plugins-official": true
+    }
+  },
+  "saas": {
+    "enabledPlugins": {
+      "harness-saas@harness": true
+    }
+  }
 }

@@ -1,6 +1,6 @@
 # ClaudeCode-agentes-skills — Harness de ingeniería web
 
-Fuente de verdad del harness de Claude Code: reglas globales, un **marketplace privado de plugins** (`harness-core`, `harness-web`, `harness-payments`), perfiles de stack y **SyncProject v2** para aplicarlos a cada proyecto sin pisar su configuración propia.
+Fuente de verdad del harness de Claude Code: reglas globales, un **marketplace privado de plugins** (`harness-core`, `harness-web`, `harness-saas`, `harness-payments`), perfiles de stack y **SyncProject v2** para aplicarlos a cada proyecto sin pisar su configuración propia.
 
 Objetivo: desarrollo consistente, seguro y verificable. Quien implementa nunca certifica su propio trabajo: verifica `qa-verifier` (sin edición) y revisa `code-reviewer` (solo lectura), con evidencia observada.
 
@@ -8,36 +8,43 @@ Objetivo: desarrollo consistente, seguro y verificable. Quien implementa nunca c
 
 | Capa | Dónde | Qué |
 |---|---|---|
-| 1 · Core | plugin `harness-core` (scope usuario) | Método (plan, work, review, systematic-debugging), agentes `code-reviewer` y `qa-verifier`, gates G1–G9, hooks de protección y calidad |
-| 2 · Módulos | plugins `harness-web`, `harness-payments` (por proyecto) | Skills web y de pagos; se activan con `enabledPlugins` del proyecto |
+| 1 · Core | plugin `harness-core` (scope usuario) | Método (producto, arquitectura, plan, work, review, debugging, entrega y operación, docs, mantenimiento), agentes `code-reviewer` y `qa-verifier`, gates G1–G9, hooks de protección, política por agente y calidad |
+| 2 · Módulos | plugins `harness-web`, `harness-saas`, `harness-payments` (por proyecto) | Skills web, SaaS/backend y pagos; se activan con `enabledPlugins` del proyecto |
+| 2b · Investigación | plugin `harness-research` (scope usuario, activo) | Mercado y web con niveles de evidencia, competencia, estrategia de producto y marketing, análisis de datos; agente `market-researcher` |
 | 3 · Perfiles | `templates/profiles/*.json` | Componen módulos, MCP, permisos, comandos de gates, typecheck y archivos de CI |
 | 4 · Proyecto | `<proyecto>/` | `CLAUDE.md`, `settings.local.json`, skills propias, `.claude/harness.project.json` (overrides). El harness nunca los escribe |
 
 ```text
 .claude-plugin/marketplace.json     catálogo "harness"
 plugins/harness-core/               skills/, agents/, hooks/ (Node .mjs), tests/
-plugins/harness-web/                skills/ (incl. web-qa con plantillas Playwright/axe/LHCI)
+plugins/harness-web/                skills/ (incl. web-qa con plantillas Playwright/axe/LHCI, qa-explore), agents/qa-explorer, tests/ (app con defectos sembrados)
+plugins/harness-saas/               skills/ (saas-architecture, api-design, data-modeling-migrations, supabase-postgres-best-practices)
 plugins/harness-payments/           skills/payments-core (referencias testeadas), payments-review, agents/
+plugins/harness-research/           skills/ (market-research, web-research + 5 de Anthropic: competitive-brief, campaign-plan,
+                                    product-brainstorming, statistical-analysis, validate-data), agents/market-researcher, NOTICE.md
 templates/profiles/                 vite-supabase, next-payload, django-react, next-supabase, modules.json
 templates/ci/                       harness-security.yml (G6 en CI)
 scripts/                            install-harness.ps1, sync-project.mjs|.ps1, harness-update-check.mjs,
                                     install-qa-tools.ps1, check-skills.mjs, tests/
 harness.lock.json                   inventario versionado de cada componente
 global/HARNESS.md                   reglas globales (→ ~/.claude/HARNESS.md)
-docs/DECISIONS.md · CHANGELOG.md
+docs/DECISIONS.md · docs/CAPABILITIES.md (matriz de capacidades, fuentes, controles y pruebas) · CHANGELOG.md
 ```
 
 ## Instalación (máquina nueva)
 
 ```powershell
 .\scripts\install-harness.ps1 -Marketplace       # HARNESS.md + marketplace "harness" + harness-core (usuario)
-.\scripts\install-qa-tools.ps1                   # gitleaks y osv-scanner (checksum verificado) en F:\Programacion\ClaudeHarness\bin
+.\scripts\install-qa-tools.ps1                   # gitleaks, osv-scanner, actionlint y hadolint (SHA-256 verificado) en ~\.claude\harness\bin (cambiable con -BinDir)
 npm i -g typescript-language-server@6.0.2 typescript@6.0.3   # LSP (TS 7 no trae tsserver)
 claude plugin install typescript-lsp@claude-plugins-official --scope user   # + context7, pr-review-toolkit, claude-security
 # Módulos de proyecto: instalarlos deshabilitados a nivel usuario; cada proyecto los habilita
 claude plugin install harness-web@harness --scope user;      claude plugin disable harness-web --scope user
+claude plugin install harness-saas@harness --scope user;     claude plugin disable harness-saas --scope user
 claude plugin install harness-payments@harness --scope user; claude plugin disable harness-payments --scope user
 claude plugin install mercadopago@claude-plugins-official --scope user; claude plugin disable mercadopago --scope user
+# Investigación: capacidad general, queda activa a nivel usuario
+claude plugin install harness-research@harness --scope user
 ```
 
 `~/.claude/settings.json` lleva además `permissions.deny` de `Read/Edit` sobre `.env`, `.env.local`, `.env.*.local`, `.env.development|production|test|staging`. El guard de `harness-core` cubre el resto (otros `.env*`, claves privadas, comandos de shell que los citen).
@@ -82,6 +89,20 @@ node scripts/sync-project.mjs --project <ruta> --rollback [<timestamp>]         
 | G8 | base de datos | migraciones en base local/efímera |
 | G9 | pagos | matriz de `payments-review` |
 
+### QA exploratoria (harness-web)
+
+El agente `qa-explorer` (Write solo en `.harness/qa/<run>/`; Bash solo `cd ./<run> && playwright-cli`; el navegador abre con una configuración del guard que limita la red a localhost; no ejecuta specs: los corre `harness-web/scripts/qa-regression.mjs --reviewed`; ver ADR-014) audita una app local o de staging como un cliente: descubre páginas, prueba formularios, botones y flujos, revisa consola y red, captura evidencia, clasifica defectos y deja informe y specs Playwright de regresión en `.harness/qa/<run>/`. Usa `playwright-cli` y el runner `@playwright/test` del proyecto o el compartido (`$HARNESS_QA_RUNNER` o `~/.claude/harness/qa-runner`). Sin producción, pagos reales ni acciones destructivas. Complementa los gates; no los reemplaza.
+
+Instrucción para iniciarla (con la app levantada):
+
+```
+Auditoría QA integral de la app en <URL local o staging>. Usá el agente harness-web:qa-explorer.
+Objetivo: <qué decisión informa>. Alcance: <secciones>. Fuera de alcance: <...>.
+Cuentas de prueba: <archivo de storage state o "sin cuentas">. Prohibido pagar o enviar datos reales.
+```
+
+Prueba de aceptación: `node plugins/harness-web/tests/fixtures/qa-app/server.mjs` y comparar el informe con `EXPECTED.md` (7 defectos sembrados + control de pago).
+
 Selección por riesgo y criterios PASS: `plugins/harness-core/skills/harness-review/references/gates.md`. Evidencia en `.harness/evidence/<tarea>/` (gitignored). Estados: PASS, FAIL, BLOCKED (fuera de autoridad), NOT_CONFIGURED (no cuenta como PASS).
 
 ## Hooks de `harness-core`
@@ -92,6 +113,8 @@ Selección por riesgo y criterios PASS: `plugins/harness-core/skills/harness-rev
 | SessionStart | anuncia perfil, módulos, gates y typecheck del manifiesto |
 | Stop | typecheck si cambiaron archivos relevantes (con caché; bloquea una vez por cadena) |
 | PostToolUse | formateador del proyecto si el manifiesto lo define |
+| UserPromptSubmit | `router.mjs`: sugiere capacidades por palabras clave y, solo si se aparta del caso normal, el modelo (haiku para búsquedas, revisión opus en riesgo alto) |
+| SessionStart / UserPromptSubmit / Stop / SessionEnd | `continuity.mjs`: estado de sesión fuera del repo; avisa de sesión interrumpida y tras compactar (ADR-018) |
 
 Límite conocido: en Windows nativo no hay sandbox; un script que abra archivos por su cuenta no lo detectan ni `deny` ni el guard.
 
@@ -111,7 +134,7 @@ Límite conocido: en Windows nativo no hay sandbox; un script que abra archivos 
 | Qué | Backup | Rollback |
 |---|---|---|
 | Repo del harness | git, tags `harness-v*` | `git checkout <tag>` + `install-harness.ps1 -Marketplace` |
-| `~/.claude` | `F:\Programacion\ClaudeHarness\backups\user-claude-<ts>\` con `SHA256SUMS` | restaurar archivos y `/reload-plugins` |
+| `~/.claude` | `<carpeta de backups>\user-claude-<ts>\` con `SHA256SUMS` | restaurar archivos y `/reload-plugins` |
 | Proyecto | `.claude/.harness-backup/<ts>/` en cada `--apply` | `sync-project.mjs --rollback` |
 | Plugins | versión en `plugin.json` y en el lock | volver a la versión anterior |
 
@@ -126,3 +149,7 @@ npm run validate       # claude plugin validate --strict (marketplace y plugins)
 ## Codebase Memory MCP (opcional)
 
 Integración opcional de [DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) (MIT), grafo local del código. `scripts\install-harness.ps1 -CodebaseMemory <Status|Install|Update|Remove>`: descarga la release oficial, verifica SHA-256 contra `checksums.txt`, instala en `%LOCALAPPDATA%\codebase-memory-mcp\bin` y registra el MCP con `claude mcp add --scope user`. Índices en `~/.cache/codebase-memory-mcp/`. Reglas de uso en `global/HARNESS.md`. Verificación: `/mcp` o `claude mcp list`.
+
+## Licencia
+
+Código y documentación propios: [Apache-2.0](LICENSE) © 2026 Martin Blanco. Las skills y scripts vendorizados de terceros (Anthropic, Vercel, Supabase, Microsoft, y otros MIT/Apache-2.0) conservan su licencia original; procedencia y commits fijados en `harness.lock.json`, `plugins/harness-research/NOTICE.md` y `plugins/harness-web/skills/qa-explore/references/upstream-licenses.md`.

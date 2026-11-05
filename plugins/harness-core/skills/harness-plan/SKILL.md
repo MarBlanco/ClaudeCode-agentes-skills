@@ -26,6 +26,8 @@ Convertir una solicitud en un contrato ejecutable para Claude Code.
    - Dependencias y riesgos.
    - Perfil del proyecto (`.claude/harness.manifest.json`) y zonas protegidas de su CLAUDE.md.
 
+   - Capacidades que aplican (producto, arquitectura, SaaS, datos, APIs, seguridad, entrega): ver [references/capabilities.md](references/capabilities.md). Si el requerimiento es vago o nuevo, empezar por `product-spec`; si existe una spec, usar sus criterios `AC-n` como criterios de aceptación.
+
 3. CLASSIFY RISK
    - Bajo, medio o alto según la tabla de `../harness-review/references/gates.md`.
    - Seleccionar los gates (G1–G9) que exigirá la verificación.

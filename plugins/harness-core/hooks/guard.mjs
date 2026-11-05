@@ -5,7 +5,9 @@
 // Si el propio hook falla, no bloquea (fail-open con aviso): un guard roto que
 // impide trabajar es peor que la red de seguridad de permissions.deny.
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { basename, dirname, isAbsolute, resolve } from 'node:path';
+import { evaluateExplorer, isExplorer } from './agent-policy.mjs';
 
 const FILE_TOOLS = new Set(['Read', 'Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 const WRITE_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
@@ -32,12 +34,31 @@ const splitSegments = (cmd) => cmd.split(/[|;&\n]+/).map((s) => s.trim()).filter
 // Palabras de un segmento, sin comillas ni redirecciones, para comparar rutas.
 const words = (seg) => seg.split(/\s+/).map((w) => w.replace(/^[<>]+|^['"(]+|['");]+$/g, '')).filter(Boolean);
 
-export function secretInCommand(cmd) {
+// ".license.key" en una expresión jq o JS es un acceso a propiedad, no una clave privada: con forma
+// de ruta de propiedades (.a.b, sin barras) y extensión de clave, solo cuenta si existe ese archivo.
+// Las reglas de .env* no se relajan.
+const PROPERTY_PATH = /^\.[A-Za-z_]\w*(\.[A-Za-z_]\w*)+$/;
+const KEY_EXT = /\.(pem|key|p12|pfx|jks|keystore)$/i;
+// Solo dentro de una expresión: la palabra cruda empieza por "(" o "\(" (p. ej. jq '"\(.license.key)"').
+// Un nombre suelto como ".tls.key" sigue bloqueado aunque no exista en el cwd del hook (el comando puede hacer cd).
+function isPropertyPathNotFile(raw, cwd) {
+  const tail = (x) => x.replace(/['");]+$/, '');
+  const s = tail(raw.replace(/^['"]*\\?\(+/, ''));
+  if (s === tail(raw.replace(/^['"]+/, ''))) return false;
+  return PROPERTY_PATH.test(s) && KEY_EXT.test(s) && !/^\.env/i.test(s) && !existsSync(resolve(cwd, s));
+}
+
+export function secretInCommand(cmd, cwd = process.cwd()) {
   for (const seg of splitSegments(cmd)) {
-    for (const w of words(seg)) {
+    for (const raw of seg.split(/\s+/).filter(Boolean)) {
+      const w = words(raw)[0];
+      if (!w) continue;
       // "VAR=.env", "--env-file=.env", "src=.env.local": se mira el valor tras "="
-      const target = w.includes('=') ? w.slice(w.lastIndexOf('=') + 1) : w;
-      if (isSecretPath(target)) return basename(target);
+      const after = (x) => (x.includes('=') ? x.slice(x.lastIndexOf('=') + 1) : x);
+      const target = after(w);
+      // Una asignación ("a=(.tls.key)") es un arreglo de bash con un nombre de archivo, no una expresión.
+      const exception = after(raw) === raw && isPropertyPathNotFile(raw, cwd);
+      if (isSecretPath(target) && !exception) return basename(target);
     }
   }
   return null;
@@ -100,7 +121,7 @@ function evaluateSearch(tool, ti) {
 
 function evaluateBash(ti, cwd) {
   const cmd = String(ti.command ?? '');
-  const secret = secretInCommand(cmd);
+  const secret = secretInCommand(cmd, cwd);
   if (secret) return ['deny', `El comando referencia un archivo de secretos (${secret}). No se leen ni copian secretos.`];
   const segments = splitSegments(cmd);
   const match = (rules) => {
@@ -123,6 +144,10 @@ export function evaluate(input) {
   const tool = input.tool_name;
   const ti = input.tool_input ?? {};
   const cwd = input.cwd || process.cwd();
+  if (isExplorer(input.agent_type)) {
+    const denied = evaluateExplorer(tool, ti, cwd);
+    if (denied) return denied;
+  }
   if (FILE_TOOLS.has(tool)) return evaluateFile(tool, ti, cwd);
   if (tool === 'Grep' || tool === 'Glob') return evaluateSearch(tool, ti);
   if (tool === 'Bash') return evaluateBash(ti, cwd);

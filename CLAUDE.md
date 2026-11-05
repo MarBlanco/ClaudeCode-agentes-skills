@@ -1,6 +1,6 @@
 # CLAUDE.md — Repositorio del Harness
 
-@global/HARNESS.md
+Las reglas globales (`global/HARNESS.md`) se cargan desde `~/.claude/CLAUDE.md` tras `scripts/install-harness.ps1`; no se importan aquí para no duplicarlas en el contexto.
 
 ## 1. Propósito
 
@@ -15,7 +15,8 @@ No contiene código de producto ni depende de proyectos consumidores concretos.
 - `global/HARNESS.md`: reglas globales reutilizables. Se instala como `~/.claude/HARNESS.md`.
 - `CLAUDE.md`: reglas de este repositorio. Importa `@global/HARNESS.md`.
 - `.claude-plugin/marketplace.json`: catálogo del marketplace privado `harness`.
-- `plugins/harness-core|harness-web|harness-payments/`: plugins (skills, agentes, hooks, tests).
+- `plugins/harness-core|harness-web|harness-saas|harness-payments/`: plugins (skills, agentes, hooks, tests).
+- `docs/CAPABILITIES.md`: matriz de capacidades, inventario, fuentes, controles preventivos vs. de instrucciones y pruebas.
 - `.claude/skills/`: Skills de mantenimiento del propio repo (`skill-creator`, `skill-development`); no se distribuyen.
 - `templates/profiles/`: perfiles de stack y módulos. `templates/ci/`: archivos de CI gestionados.
 - `scripts/`: `install-harness.ps1` (HARNESS.md, `-Marketplace`, `-CodebaseMemory`), `sync-project.mjs|.ps1` (SyncProject v2), `harness-update-check.mjs`, `install-qa-tools.ps1`, `check-skills.mjs` y sus tests.
@@ -26,11 +27,13 @@ No contiene código de producto ni depende de proyectos consumidores concretos.
 
 | Plugin | Skills | Agentes |
 |---|---|---|
-| `harness-core` (usuario) | `harness-plan`, `harness-work`, `harness-review` (+ `references/gates.md`), `systematic-debugging` | `code-reviewer` (read-only), `qa-verifier` (sin edición) |
-| `harness-web` (por proyecto) | `frontend-design`, `design-loop`, `web-design-guidelines`, `vercel-react-best-practices`, `vercel-composition-patterns`, `playwright-cli`, `chrome-devtools`, `web-qa` | — |
+| `harness-core` (usuario) | `harness-plan` (+ `references/capabilities.md`), `harness-work` (+ `references/model-routing.md`), `memory-policy`, `harness-review` (+ `references/gates.md`), `systematic-debugging`, `product-spec`, `architecture-decisions`, `ops-delivery`, `tech-docs`, `maintenance-upgrades` | `code-reviewer` (read-only), `qa-verifier` (sin edición) |
+| `harness-web` (por proyecto) | `frontend-design`, `design-loop`, `web-design-guidelines`, `vercel-react-best-practices`, `vercel-composition-patterns`, `playwright-cli`, `chrome-devtools`, `web-qa`, `qa-explore`, `seo`, `owasp-security` | `qa-explorer` (Write solo en la corrida; Bash solo `playwright-cli`; red del navegador limitada a localhost; no ejecuta specs — ADR-014) |
+| `harness-saas` (por proyecto) | `saas-architecture`, `api-design`, `data-modeling-migrations`, `supabase-postgres-best-practices` | — |
 | `harness-payments` (por proyecto) | `payments-core`, `payments-review` | `payments-engineer` |
+| `harness-research` (usuario) | `market-research`, `web-research`, `competitive-brief`, `campaign-plan`, `product-brainstorming`, `statistical-analysis`, `validate-data` (las cinco últimas de Anthropic, Apache-2.0) | `market-researcher` (solo lectura, web) |
 
-En sesión aparecen con prefijo de plugin (`harness-core:harness-work`). Hooks de `harness-core`: guard de secretos/lockfiles/migraciones/operaciones destructivas, anuncio de perfil, typecheck en Stop y formato (según el manifiesto del proyecto).
+En sesión aparecen con prefijo de plugin (`harness-core:harness-work`). Hooks de `harness-core`: guard de secretos/lockfiles/migraciones/operaciones destructivas y política por agente (`qa-explorer`), anuncio de perfil y capacidades, enrutador de capacidades y sugerencia de modelo por pedido, continuidad de sesión, entregables de `qa-explorer` al terminar, typecheck en Stop y formato (según el manifiesto del proyecto).
 
 Este inventario describe las capacidades esperadas del repositorio. Antes de utilizarlas, comprobar que la Skill o el agente correspondiente esté disponible en el contexto actual.
 
@@ -77,32 +80,9 @@ No sustituir sus instrucciones por una segunda implementación paralela del mism
 
 ### 4.3 Selección de Skills especializadas
 
-Elegir según la necesidad concreta:
+La tabla necesidad → capacidad vive en `plugins/harness-core/skills/harness-plan/references/capabilities.md` (única fuente; no duplicarla aquí). Es una guía, no una orden de activar cada Skill; combinar solo las necesarias sin repetir comprobaciones.
 
-| Necesidad | Capacidad principal |
-|---|---|
-| Crear o rediseñar interfaces | `frontend-design` |
-| Iterar y perfeccionar un diseño | `design-loop` |
-| Inspeccionar una web en Chrome real | `chrome-devtools` |
-| Automatizar navegación y pruebas | `playwright-cli` |
-| Investigar errores y su causa raíz | `systematic-debugging` |
-| Revisar diseño, accesibilidad y usabilidad web | `web-design-guidelines` |
-| Aplicar patrones de composición React | `vercel-composition-patterns` |
-| Mejorar rendimiento de React y Next.js | `vercel-react-best-practices` |
-| Crear o mantener Skills | `skill-development` |
-| Crear una Skill con evals, medir su rendimiento u optimizar su descripción | `skill-creator` (oficial de Anthropic, commit `ca45fc4`; cambios locales: dos parches de seguridad en `eval-viewer/generate_review.py` — escape del JSON embebido y validación Host/Origin/Content-Type —, reaplicar al actualizar) |
-| Planificar una tarea compleja | `harness-plan` |
-| Coordinar implementación y verificación | `harness-work` |
-| Verificar con gates G1–G9 y evidencia | agente `qa-verifier` |
-| Revisar la calidad final | `harness-review` |
-| Preparar gates web (E2E, visual, a11y, performance) | `web-qa` |
-| Diseñar o cambiar pagos | `payments-core` + agente `payments-engineer` |
-| Revisar pagos (invariantes y matriz G9) | `payments-review` |
-| Integración específica de Mercado Pago | plugin oficial `mercadopago` (`mp-integration-expert`) |
-
-Esta tabla es una guía de selección, no una orden de activar automáticamente cada Skill.
-
-Cuando una tarea abarque varias áreas, combinar las Skills necesarias sin repetir comprobaciones equivalentes.
+Mantenimiento de este repo: `skill-development` (crear/mantener Skills) y `skill-creator` (evals y optimización; oficial de Anthropic, commit `ca45fc4`; cambios locales: dos parches de seguridad en `eval-viewer/generate_review.py` — escape del JSON embebido y validación Host/Origin/Content-Type —, reaplicar al actualizar). Mercado Pago: plugin oficial `mercadopago` (`mp-integration-expert`).
 
 ### 4.4 Revisión independiente
 
@@ -122,102 +102,22 @@ Una modalidad de revisión no sustituye automáticamente a las demás.
 
 ## 5. Uso de herramientas y MCP
 
-Las Skills proporcionan instrucciones; no garantizan que sus herramientas externas estén disponibles.
+Las Skills no garantizan que sus herramientas estén disponibles: comprobarlo en la sesión (`/mcp`) antes de depender de ellas, usarlas solo para las comprobaciones pertinentes y, si faltan, informar el bloqueo (no afirmar que se inspeccionó una página ni que la consola está limpia).
 
-Antes de depender de una herramienta necesaria:
+- `chrome-devtools`: inspeccionar la app real (URL correcta, consola, red, capturas, estados y tamaños); no para tareas sin navegador.
+- `playwright-cli`: recorridos reproducibles y regresiones; no duplicar pruebas con varias herramientas sin evidencia adicional.
+- Codebase Memory (opcional; ni Skill ni agente): reglas en `global/HARNESS.md`; se gestiona con `scripts/install-harness.ps1 -CodebaseMemory <Status|Install|Update|Remove>`; comprobar herramientas e índice antes de usarlo; en VERIFY no cuenta como evidencia; indexar un proyecto consumidor requiere autorización (índice en `~/.cache/codebase-memory-mcp/`).
 
-1. Comprobar que está disponible en la sesión actual.
-2. Consultar sus instrucciones de uso.
-3. Utilizarla únicamente para las comprobaciones pertinentes.
-4. Registrar los resultados observados.
-5. Si no está disponible, informar el bloqueo y evaluar una alternativa compatible.
+## 6. Contrato de ejecución y reparaciones
 
-No confundir un servidor configurado o conectado con herramientas funcionales y accesibles.
+Tareas no triviales: `ANALYZE → PLAN → IMPLEMENT → VERIFY → REVIEW → PASS` (detalle en `global/HARNESS.md` y `harness-work`). PASS solo con criterios de aceptación y verificaciones obligatorias cumplidos; si algo no pudo ejecutarse, informarlo y no presentar la tarea como totalmente verificada.
 
-### 5.1 Verificación con Chrome DevTools
+Si algo falla: `FAIL → ROOT CAUSE → REPAIR → VERIFY → REVIEW`, máximo tres ciclos; luego detenerse y documentar el bloqueo. No repetir intentos idénticos sin evidencia nueva ni cambiar configuración global por un problema local. Modelo por tarea y escalamiento: `harness-work/references/model-routing.md`.
 
-Utilizar `chrome-devtools` cuando sea necesario inspeccionar una aplicación web real, investigar errores del navegador o comprobar un cambio visual.
+## 7. Memoria y continuidad
 
-Cuando corresponda:
-- Abrir la URL correcta del proyecto.
-- Confirmar que se está inspeccionando la aplicación esperada.
-- Capturar evidencia visual.
-- Revisar los errores relevantes de consola y las peticiones de red.
-- Comprobar los estados y tamaños de pantalla pertinentes.
-- Repetir las comprobaciones tras corregir defectos.
-
-No utilizar Chrome DevTools para tareas que no requieren navegador.
-
-Si el MCP no está disponible, no afirmar que se inspeccionó la página ni que la consola está limpia.
-
-### 5.2 Verificación con Playwright
-
-Utilizar `playwright-cli` cuando se necesiten recorridos reproducibles, pruebas funcionales o automatización de interacciones.
-
-Preferir comprobaciones automatizadas para flujos que deban repetirse.
-
-No ejecutar las mismas pruebas con varias herramientas si ninguna aporta evidencia adicional.
-
-### 5.3 Codebase Memory (opcional)
-
-Las reglas de uso están en `global/HARNESS.md` (sección "Codebase Memory"); no se repiten aquí.
-
-- Es una capacidad opcional, no una Skill ni un agente. La instala y configura `scripts/install-harness.ps1 -CodebaseMemory <Status|Install|Update|Remove>`.
-- Antes de usarlo en una tarea, comprobar que sus herramientas están disponibles en la sesión (`/mcp`) y que el proyecto está indexado; si no, informar y usar lectura directa.
-- Consultarlo en el ANALYZE de tareas no triviales sobre bases de código medianas o grandes (estructura, dependencias, impacto). En VERIFY no cuenta como evidencia.
-- El registro MCP es de scope usuario (disponible en todos los proyectos). Indexar un proyecto consumidor requiere autorización; el índice vive fuera del repo (`~/.cache/codebase-memory-mcp/`).
-
-## 6. Contrato de ejecución
-
-Para tareas no triviales, seguir este ciclo:
-
-`ANALYZE → PLAN → IMPLEMENT → VERIFY → REVIEW → PASS`
-
-### ANALYZE
-- Comprender el pedido y las restricciones.
-- Inspeccionar el código y la documentación relevantes.
-- Identificar las capacidades disponibles.
-- Establecer el alcance sin modificar archivos innecesariamente.
-
-### PLAN
-- Seleccionar las Skills y agentes pertinentes.
-- Definir los criterios de aceptación.
-- Determinar qué pruebas y verificaciones se necesitan.
-
-### IMPLEMENT
-- Aplicar el cambio mínimo que resuelva el problema.
-- Respetar la arquitectura, las convenciones y las reglas del proyecto.
-- Evitar modificaciones ajenas al alcance.
-
-### VERIFY
-- Ejecutar las pruebas correspondientes al cambio.
-- Comprobar lint, tipos y build cuando sean pertinentes.
-- Verificar el comportamiento real de la aplicación cuando corresponda.
-- Utilizar evidencia observable; no inferir resultados que no se comprobaron.
-
-### REVIEW
-- Revisar los cambios y los posibles efectos secundarios.
-- Utilizar `harness-review` y el agente independiente cuando corresponda.
-- Corregir los defectos encontrados y repetir las verificaciones afectadas.
-
-### PASS
-Aprobar únicamente cuando se hayan cumplido los criterios de aceptación y las verificaciones obligatorias.
-
-Si alguna comprobación necesaria no pudo ejecutarse, informar el bloqueo y no presentar la tarea como completamente verificada.
-
-## 7. Reparaciones y límites
-
-Si una verificación o revisión falla:
-
-`FAIL → ROOT CAUSE → REPAIR → VERIFY → REVIEW`
-
-- Investigar la causa antes de aplicar una corrección.
-- Corregir el problema concreto sin introducir cambios innecesarios.
-- Repetir las pruebas afectadas.
-- Límite máximo: tres ciclos de reparación.
-- Si persiste el fallo, detenerse y documentar el bloqueo.
-
-No repetir intentos idénticos sin nueva evidencia ni cambiar configuraciones globales para solucionar problemas locales sin justificación.
+- Memoria automática nativa (`~/.claude/projects/<proyecto>/memory/`): solo hechos no derivables del repo; política en la skill `harness-core:memory-policy`; auditoría con `node scripts/memory-lint.mjs`.
+- Hooks `continuity.mjs`: estado mínimo fuera del repo (`~/.claude/harness/sessions/`); al iniciar avisan si la sesión previa quedó interrumpida y, tras compactar, recuerdan la tarea en curso. Ver ADR-018.
 
 ## 8. Evidencia y reporte final
 
