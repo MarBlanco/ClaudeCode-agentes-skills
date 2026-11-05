@@ -1,233 +1,286 @@
 # Claude Code Harness
 
+**A Modular Engineering Framework for AI-Assisted Web and SaaS Development.**
+
 [![harness-ci](https://github.com/MarBlanco/ClaudeCode-agentes-skills/actions/workflows/harness-ci.yml/badge.svg)](https://github.com/MarBlanco/ClaudeCode-agentes-skills/actions/workflows/harness-ci.yml)
-[![Licencia: Apache-2.0](https://img.shields.io/badge/licencia-Apache--2.0-blue.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-Un *harness* para [Claude Code](https://claude.com/claude-code): una capa de método, agentes especializados, controles preventivos y verificación con evidencia que se instala como marketplace de plugins y se aplica a cada proyecto sin pisar su configuración.
+Claude Code Harness targets the development of web applications and SaaS products: front end, back end and APIs, authentication, databases, multi-tenancy, payments, QA and security. It is a *harness* for [Claude Code](https://claude.com/claude-code): a set of plugins that adds a working method, specialised agents, preventive hooks and evidence-based verification on top of the assistant, and a tool (SyncProject v2) that applies it to each project without overwriting the project's own configuration.
 
-> **Idea central:** quien implementa nunca certifica su propio trabajo. La verificación la hace otro agente sin permisos de edición, con salida observada guardada como evidencia, y toda afirmación del sistema debe poder demostrarse con un test, una ejecución o una limitación declarada.
+> **Core idea:** whoever implements a change does not certify it. Verification is delegated to a separate agent that has no edit tools, its output is stored as evidence, and every claim in this repository is meant to be backed by a test, a reproducible run, or an explicitly stated limitation.
 
-## Qué problema resuelve
+> **Language note:** the code and this README are in English; the internal documentation (`docs/`, skills, ADRs) is written in Spanish.
 
-Un asistente de código autónomo, sin estructura, tiende a: declarar "listo" lo que solo compila, tocar archivos sensibles (`.env`, lockfiles, migraciones), repetir intentos sin límite, perder el hilo entre sesiones y gastar contexto en capacidades que no usa. El Harness aborda esos riesgos con mecanismos concretos y comprobables:
+## What it is, in plain terms
 
-| Riesgo | Mecanismo | Tipo de control |
+Claude Code can read and edit your code, run commands and use *plugins* (bundles of skills, agents and hooks). On its own, an autonomous assistant can declare work "done" because it compiles, touch sensitive files, retry without limit, or lose context between sessions. The Harness addresses those risks with concrete mechanisms:
+
+| Risk | Mechanism | Kind of control |
 |---|---|---|
-| Declarar terminado sin evidencia | Agente `qa-verifier` (sin edición) + nueve *gates* G1–G9 con evidencia en disco | Proceso verificable |
-| Auto-aprobación | Separación implementador / `qa-verifier` / `code-reviewer` (solo lectura) | Permisos por agente |
-| Filtrar o modificar secretos, lockfiles, migraciones | Hook `PreToolUse` (*guard*) que **deniega** | Preventivo |
-| Operaciones destructivas o de producción | El guard pide confirmación (push, reset duro, `DROP`, `vercel --prod`…) | Confirmación |
-| Bucles infinitos de reparación | Máximo de 3 ciclos y reporte de bloqueo | Regla del flujo |
-| Exploración QA que podría salirse de su alcance | Política por agente (`qa-explorer`) + red del navegador limitada a `localhost` | Preventivo (con límites declarados) |
-| Perder contexto entre sesiones | Hook de continuidad + política de memoria | Asistencia |
-| Configuración de proyectos desalineada | **SyncProject v2**: aplica perfiles de forma idempotente, con conflictos, backup y rollback | Preventivo |
+| Declaring work done without evidence | `qa-verifier` agent runs the selected quality gates (G1–G9) and stores command output in `.harness/evidence/` | Verifiable process |
+| Self-approval | Implementation, verification (`qa-verifier`) and review (`code-reviewer`) are separate roles with different tool lists | Per-agent permissions |
+| Reading or changing secrets, lockfiles, committed migrations | `PreToolUse` hook (the *guard*) **denies** the call | Preventive |
+| Destructive or production operations | The guard asks for confirmation (push, hard reset, `DROP`, `vercel --prod`, publish…) | Confirmation |
+| Endless repair loops | At most 3 repair cycles, then stop and report | Workflow rule |
+| An exploratory QA agent leaving its scope | Per-agent policy for `qa-explorer` plus a browser network restricted to localhost | Preventive, with declared limits |
+| Losing context between sessions | Session-continuity hook and a memory policy | Assistance, not guaranteed |
+| Project configuration drifting | **SyncProject v2**: idempotent profile application with conflict detection, backup and rollback | Preventive |
 
-## Arquitectura
+## Architecture
 
 ```mermaid
 flowchart TB
-  subgraph Usuario["~/.claude (usuario)"]
-    H["HARNESS.md<br/>reglas globales"]
-    CORE["harness-core<br/>método · agentes · hooks"]
-    RES["harness-research<br/>investigación con evidencia"]
+  subgraph User["User scope: ~/.claude"]
+    CORE["harness-core<br/>method, agents, hooks"]
+    RES["harness-research<br/>research with evidence levels"]
   end
-  subgraph Mod["Módulos (se habilitan por proyecto)"]
-    WEB["harness-web<br/>QA, diseño, SEO, OWASP"]
-    SAAS["harness-saas<br/>tenants, APIs, datos"]
-    PAY["harness-payments<br/>invariantes de pagos"]
+  subgraph Modules["Project modules: installed disabled, enabled per project"]
+    WEB["harness-web"]
+    SAAS["harness-saas"]
+    PAY["harness-payments"]
   end
-  subgraph Proy["Proyecto consumidor"]
-    SET[".claude/settings.json<br/>enabledPlugins"]
-    MAN[".claude/harness.manifest.json<br/>perfil · gates · hashes"]
-    OWN["CLAUDE.md y skills propias<br/>(el harness nunca las escribe)"]
+  subgraph Project["Consumer project"]
+    SET[".claude/settings.json<br/>enabledPlugins, permissions"]
+    MAN[".claude/harness.manifest.json<br/>profile, modules, gates, managed entries"]
+    OWN["Project-owned files<br/>CLAUDE.md, local skills<br/>never written by the Harness"]
   end
-  PROF["templates/profiles<br/>vite-supabase · next-supabase<br/>next-payload · django-react"]
-  SYNC["SyncProject v2<br/>sync-project.mjs"]
+  PROF["templates/profiles"]
+  SYNC["SyncProject v2<br/>scripts/sync-project.mjs"]
   PROF --> SYNC
-  SYNC -->|"solo lo que registra en el manifiesto"| SET
+  SYNC --> SET
   SYNC --> MAN
-  Mod -.->|"habilitados por"| SET
-  CORE --- H
+  SET -.->|"enables"| Modules
 ```
 
-| Capa | Dónde | Qué aporta |
+| Plugin | Scope | Responsibility |
 |---|---|---|
-| Core | `plugins/harness-core` (usuario, siempre activo) | Método (`product-spec` → `architecture-decisions` → `harness-plan` → `harness-work` → `harness-review`), agentes `code-reviewer` y `qa-verifier`, catálogo de gates, hooks |
-| Módulos | `harness-web`, `harness-saas`, `harness-payments` | Conocimiento y verificación de dominio; cargados solo en los proyectos que los necesitan para no gastar contexto |
-| Investigación | `harness-research` (usuario) | Investigación de mercado/web con niveles de evidencia (`verified_sales` / `popularity` / `hypothesis`), nunca cifras inventadas |
-| Perfiles | `templates/profiles` | Componen módulos, MCP, permisos, comandos de gates y archivos de CI según el stack |
+| `harness-core` | user, always on | Method skills (`product-spec`, `architecture-decisions`, `harness-plan`, `harness-work`, `harness-review`, `systematic-debugging`, `ops-delivery`, `tech-docs`, `maintenance-upgrades`, `memory-policy`), agents `code-reviewer` and `qa-verifier`, the gate catalogue, and all hooks |
+| `harness-web` | per project | Front-end and web QA: `frontend-design`, `design-loop`, `web-design-guidelines`, `vercel-react-best-practices`, `vercel-composition-patterns`, `playwright-cli`, `chrome-devtools`, `web-qa`, `qa-explore`, `seo`, `owasp-security`; agent `qa-explorer` |
+| `harness-saas` | per project | `saas-architecture` (tenancy, auth, roles, plans), `api-design` (APIs, webhooks), `data-modeling-migrations`, `supabase-postgres-best-practices` |
+| `harness-payments` | per project | `payments-core` (invariants plus tested reference code), `payments-review` (G9 matrix); agent `payments-engineer` |
+| `harness-research` | user | `market-research` and `web-research` (evidence levels `verified_sales` / `popularity` / `hypothesis`, sources cited, figures never invented) and five skills vendored from Anthropic (`competitive-brief`, `campaign-plan`, `product-brainstorming`, `statistical-analysis`, `validate-data`); agent `market-researcher` |
 
-Decisiones de diseño y alternativas descartadas: [`docs/DECISIONS.md`](docs/DECISIONS.md) (ADR-001…018). Matriz de capacidades con su estado de verificación real: [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md).
+A *profile* (`templates/profiles/`: `vite-supabase`, `next-supabase`, `next-payload`, `django-react`) selects modules, optional MCP servers, permissions, gate commands and CI files for a stack. Skills are loaded only in the projects that enable their module, to avoid spending context on unused capabilities.
 
-## Cómo trabajan los agentes
+Design decisions and rejected alternatives: [`docs/DECISIONS.md`](docs/DECISIONS.md) (ADR-001 … ADR-018). Capability matrix with the real verification status of each item: [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md).
+
+## Agents
 
 ```mermaid
 sequenceDiagram
-  participant U as Usuario
-  participant W as harness-work (coordinador)
-  participant I as Implementación (hilo principal)
-  participant V as qa-verifier (sin edición)
-  participant R as code-reviewer (solo lectura)
-  U->>W: tarea no trivial
-  W->>W: harness-plan: alcance, riesgo, gates, criterios AC-n
-  W->>I: implementar (rama de tarea)
-  I->>V: archivos cambiados + gates elegidos por riesgo
-  V-->>W: PASS / FAIL / BLOCKED / NOT_CONFIGURED + evidencia en .harness/evidence
-  W->>R: diff + evidencia
-  R-->>W: hallazgos por severidad
-  alt hay fallos
-    W->>I: reparar causa raíz (máx. 3 ciclos)
-    I->>V: repetir gates afectados
+  participant U as User
+  participant M as Main agent running harness-work
+  participant V as qa-verifier
+  participant R as code-reviewer
+  U->>M: non-trivial task
+  M->>M: plan, risk level, gates, acceptance criteria
+  M->>M: implement on a task branch
+  M->>V: changed files and gates selected by risk
+  V-->>M: PASS, FAIL, BLOCKED or NOT_CONFIGURED per gate, plus evidence files
+  M->>R: diff and evidence
+  R-->>M: findings by severity
+  opt failures or findings
+    M->>M: fix root cause, at most 3 cycles
+    M->>V: re-run failed gates
   end
-  W-->>U: reporte: qué se hizo, qué se verificó, qué quedó pendiente
+  M-->>U: report of what was done, verified and left pending
 ```
 
-| Agente | Rol | Permisos declarados |
+| Agent | Plugin | Model | Declared tools |
+|---|---|---|---|
+| `code-reviewer` | core | `opus` | Read, Grep, Glob, Bash |
+| `qa-verifier` | core | `sonnet` | Read, Grep, Glob, Bash |
+| `qa-explorer` | web | `sonnet` | Read, Grep, Glob, Write, Bash, Skill |
+| `payments-engineer` | payments | `opus` | Read, Grep, Glob, Edit, Write, Bash, Skill |
+| `market-researcher` | research | `sonnet` | WebSearch, WebFetch, Read, Grep, Glob |
+
+Notes on what these permissions mean:
+
+- `code-reviewer` and `qa-verifier` have **no Edit/Write tools**, but they do have Bash (they need it to run commands). "Read-only" therefore means "no edit tools plus instructions", not an operating-system sandbox.
+- `qa-explorer` has a stricter, enforced policy (see Security).
+- `npm run check:consistency` verifies that these declarations exist and that the agents documented as read-only or limited do not declare write tools they should not have.
+- **Model per task.** Models are fixed in each agent's frontmatter. In addition, the `router.mjs` hook can add a one-line *suggestion* (no model is called to produce it): delegate broad searches to a cheaper model, or reinforce review for high-risk edits. The table is in [`model-routing.md`](plugins/harness-core/skills/harness-work/references/model-routing.md). A hook cannot change the session model, the main agent decides whether to follow the suggestion, and the resulting savings have **not been measured**.
+
+## Quality gates
+
+`harness-review` defines nine independent gates; which ones apply depends on the risk level of the change (low, medium, high). The catalogue lives in [`gates.md`](plugins/harness-core/skills/harness-review/references/gates.md) and the concrete commands for each project live in its `.claude/harness.manifest.json`.
+
+| Gate | Check |
+|---|---|
+| G1 Static | build, typecheck, lint (`ruff` for Python) |
+| G2 Unit / integration | Vitest / Jest / pytest |
+| G3 E2E | Playwright Test |
+| G4 Visual and responsive | screenshots at 375, 768 and 1280 px, plus a real-Chrome review |
+| G5 Accessibility | `@axe-core/playwright`, Lighthouse accessibility |
+| G6 Security | gitleaks, osv-scanner; `claude-security` when the diff touches auth, permissions, payments or secrets |
+| G7 Performance | Lighthouse CI against budgets |
+| G8 Database | migration applied on a local/ephemeral database, RLS/policy tests |
+| G9 Payments | `payments-review` scenario matrix with mocks and sandbox |
+
+Gate states: `PASS` (command run in this session, output saved, criterion met), `FAIL`, `BLOCKED` (needs an action outside the agent's authority, such as production or real credentials) and `NOT_CONFIGURED` (the project lacks the tool; **never counts as PASS**).
+
+The gates are a method executed by `qa-verifier` against the *consumer project's* own tooling. This repository does not ship a runner that executes G3–G8 for you; what it tests itself is listed under Verification.
+
+## Security: what is prevented and what is not
+
+| Control | Kind | Evidence in this repository |
 |---|---|---|
-| `code-reviewer` | Revisión independiente (modelo `opus`) | Read, Grep, Glob, Bash |
-| `qa-verifier` | Ejecuta gates y guarda evidencia (`sonnet`) | Read, Grep, Glob, Bash (sin Edit/Write) |
-| `qa-explorer` | Exploración QA autónoma como cliente (`sonnet`) | Read, Grep, Glob, Write (solo la corrida), Bash (solo `playwright-cli`), Skill |
-| `payments-engineer` | Implementación de pagos bajo `payments-core` (`opus`) | Read, Grep, Glob, Edit, Write, Bash, Skill |
-| `market-researcher` | Investigación web de solo lectura (`sonnet`) | WebSearch, WebFetch, Read, Grep, Glob |
+| Read/edit of `.env*`, private keys, `.credentials.json`, including through Bash, Grep and Glob, with Windows or POSIX paths | **Preventive** (hook denies) | guard tests |
+| Manual edits of lockfiles and of already-versioned migrations; `git push --force`; commits on `main`/`master` | **Preventive** | guard tests |
+| Push, hard reset, `DROP`/`TRUNCATE`, `supabase db push`, `vercel --prod`, publish | User confirmation | guard tests |
+| Manifest commands (typecheck, format) | Run only if their hash was approved by the user, stored **outside the repository** | tests |
+| `qa-explorer`: writes only inside its run folder, Bash limited to `playwright-cli`, browser with a sink proxy and local origins only, sessions only those opened through the guard | **Preventive**, fails closed | policy tests (each bypass found in adversarial reviews is a regression case) |
+| `qa-explorer`: do not click "pay", do not submit real data, redact secrets | **Instructions only** | observed runs, no guarantee |
+| Specs written by the agent | The agent does not run them; `qa-regression.mjs` does, after human review (`--reviewed`) | runner tests |
 
-Estos permisos están declarados en el *frontmatter* de cada agente y `npm run check:consistency` verifica que los agentes "de solo lectura" no declaren herramientas de escritura. `NOT_CONFIGURED` nunca cuenta como `PASS`.
+Declared limits:
 
-**Modelo por tarea.** El hook `router.mjs` sugiere (sin llamar a ningún modelo) delegar búsquedas amplias a un modelo barato o reforzar la revisión en tareas de riesgo alto; la tabla está en [`harness-work/references/model-routing.md`](plugins/harness-core/skills/harness-work/references/model-routing.md). Es una **sugerencia**: un hook no puede cambiar el modelo, y el ahorro **no está medido**.
+- On native Windows there is no operating-system sandbox. A script that opens files by itself, obfuscated file names, or a malicious spec approved without careful review can bypass the controls.
+- The `qa-explorer` policy prevents mistakes and instructions injected by a web page; it does **not** contain a deliberately hostile agent. OS-level isolation (Docker, WSL, Node `--permission`) was evaluated and is not implemented.
+- The backend of an app under test can still charge a payment if "pay" is clicked; use sandbox credentials.
+- The guard fails open if its own process breaks (a broken guard that blocks all work was judged worse); `permissions.deny` entries in `~/.claude/settings.json` for `.env*` are recommended as a second line.
 
-## Seguridad: qué se previene y qué no
+Details and review history: [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) sections 5 and 7.
 
-| Control | Tipo | Evidencia |
+### Hooks (all in `harness-core`)
+
+| Event | Script | What it does |
 |---|---|---|
-| Lectura/edición de `.env*`, claves privadas, `.credentials.json`, también vía Bash/Grep/Glob y con rutas de Windows o POSIX | **Preventivo** (hook, deniega) | tests del guard |
-| Edición de lockfiles y de migraciones ya versionadas; `push --force`; `commit` en `main`/`master` | **Preventivo** | tests del guard |
-| Push, reset duro, `DROP`/`TRUNCATE`, `supabase db push`, `vercel --prod`, publicar | Confirmación del usuario | tests del guard |
-| Comandos del manifiesto (typecheck, formato) | Solo se ejecutan si su hash fue aprobado por el usuario, guardado **fuera del repo** | tests |
-| `qa-explorer`: escritura solo en su corrida; Bash reducido a `playwright-cli`; navegador con proxy sumidero y orígenes locales; sesiones solo las abiertas por el guard | **Preventivo** (falla cerrada) | tests de política (cada *bypass* hallado en revisiones adversariales es un caso de regresión) + pruebas reales |
-| `qa-explorer`: no pulsar "pagar", no enviar datos reales, redactar secretos | **Solo instrucciones** | corridas observadas, sin garantía |
-| Specs escritos por el agente | No los ejecuta el agente: los corre `qa-regression.mjs` tras revisión humana (`--reviewed`) | tests del runner |
+| `PreToolUse` | `guard.mjs` (calls `agent-policy.mjs` for `qa-explorer`) | deny / confirm rules above |
+| `SessionStart` | `session-start.mjs`, `continuity.mjs` | announces profile, modules and gates from the manifest; warns if the previous session ended abnormally |
+| `UserPromptSubmit` | `router.mjs`, `continuity.mjs` | suggests capabilities by keyword and, only when the request deviates from the normal case, a model; records the last request |
+| `PostToolUse` | `quality.mjs format` | runs the project formatter if the manifest defines one |
+| `Stop` | `quality.mjs stop`, `continuity.mjs` | typecheck when relevant files changed (cached) |
+| `SubagentStop` | `qa-complete.mjs` | requires `qa-explorer` deliverables or an explicit `INCOMPLETE` status |
+| `SessionEnd` | `continuity.mjs` | marks the session as closed |
 
-**Límites declarados** (no se ocultan): en Windows nativo no hay *sandbox* de sistema; un script que abra archivos por su cuenta, nombres de archivo ofuscados o specs maliciosos revisados por descuido pueden esquivar los controles; la política del `qa-explorer` previene errores e instrucciones inyectadas por una página, **no contiene a un agente deliberadamente hostil**; el backend de la app bajo prueba puede cobrar si se pulsa "pagar" (requiere credenciales sandbox); el guard falla abierto si su propio proceso se rompe, apoyado en `permissions.deny`. Detalle y revisiones: [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) §5 y §7.
+`continuity.mjs` stores a small state file **outside the repository** (`~/.claude/harness/sessions/`), does not read transcripts, and only reports; it does not act. Effectiveness over long interactive use has not been measured.
 
 ## SyncProject v2
 
-Aplica un perfil a un proyecto consumidor de forma segura:
+Applies a profile to a consumer project safely.
 
 ```mermaid
 flowchart LR
-  A["--project + perfil"] --> B{"dry-run"}
-  B -->|"sin --apply"| P["muestra el plan<br/>no escribe"]
-  B -->|"--apply"| C{"¿conflictos?"}
-  C -->|"sí: entrada gestionada<br/>editada a mano"| X["aborta sin escribir<br/>(exit 2)"]
-  C -->|"no"| D["backup en<br/>.claude/.harness-backup/ts"]
-  D --> E["escribe solo lo gestionado<br/>+ registra en el manifiesto"]
-  E --> F["re-sync: idempotente"]
-  D -.->|"--rollback"| G["restaura byte a byte"]
+  A["--project and profile"] --> B{"--apply?"}
+  B -->|"no, dry-run"| P["print the plan, write nothing"]
+  B -->|"yes"| C{"conflicts?"}
+  C -->|"yes: managed entry edited by hand"| X["abort, write nothing, exit 2"]
+  C -->|"no"| D["backup to .claude/.harness-backup"]
+  D --> E["write managed entries, record them in the manifest"]
+  D -.->|"--rollback"| G["restore previous state"]
 ```
 
-- Solo toca lo que **registró** en `.claude/harness.manifest.json`: entradas de `enabledPlugins`, reglas de `permissions`, `mcpServers` de `.mcp.json`, un bloque delimitado de `.gitignore` y archivos de CI de una lista blanca. Nunca `CLAUDE.md`, `settings.local.json` ni skills/agentes propios.
-- Lo que el proyecto ya tenía igual se **adopta** y nunca se retira; lo gestionado y editado o borrado a mano es **conflicto**.
-- Las rutas gestionadas están en lista blanca y contenidas en el proyecto (se rechazan `..`, rutas absolutas POSIX/Windows y UNC).
+- It only touches what it has **recorded** in `.claude/harness.manifest.json`: `enabledPlugins` entries, `permissions` rules, `mcpServers` of `.mcp.json`, a delimited block of `.gitignore`, and CI files from an allow-list. It never touches `CLAUDE.md`, `settings.local.json` or the project's own skills and agents.
+- An entry the project already had with the same value is **adopted** and never removed. A managed entry or file that was edited or deleted by hand is a **conflict**: nothing is written.
+- Managed paths are allow-listed and must stay inside the project; `..`, POSIX/Windows absolute paths and UNC paths are rejected.
+- Running it again with no changes does nothing (idempotent). `--retire-legacy` moves old copies of Harness skills/agents found in `.claude/` into the backup. Project overrides (gate commands, typecheck) go in `.claude/harness.project.json`, which the Harness never writes.
 
 ```bash
-node scripts/sync-project.mjs --project <ruta> --profile next-supabase                 # dry-run
-node scripts/sync-project.mjs --project <ruta> --profile next-supabase --apply         # backup + escritura
-node scripts/sync-project.mjs --project <ruta> --rollback [<timestamp>]                # restaura
+node scripts/sync-project.mjs --project <path> --profile next-supabase            # dry-run
+node scripts/sync-project.mjs --project <path> --profile next-supabase --apply    # backup + write
+node scripts/sync-project.mjs --project <path> --apply                            # re-sync from the manifest
+node scripts/sync-project.mjs --project <path> --rollback [<timestamp>]           # restore
+node scripts/sync-project.mjs --project <path> --list-backups
 ```
 
-## Demostraciones reproducibles
+`scripts/sync-project.ps1` is a PowerShell wrapper with the same parameters.
 
-Ninguna requiere credenciales ni toca proyectos reales.
+## Reproducible demos
+
+Neither demo needs credentials or touches a real project.
 
 ```bash
-npm run demo:sync    # SyncProject sobre un proyecto temporal: dry-run → apply → idempotencia → conflicto → rollback
-npm run demo:qa      # regresión de QA sobre la app con 7 defectos sembrados (requiere un runner Playwright, ver abajo)
+npm run demo:sync   # SyncProject on a temporary project: dry-run, apply, idempotence, conflict, rollback
+npm run demo:qa     # regression specs against the seeded-defect app (needs a Playwright runner, see below)
 ```
 
-- **`demo:sync`** crea un proyecto temporal, ejecuta la CLI real y falla (exit 1) si algún resultado no es el esperado; corre en CI en Linux y Windows.
-- **`demo:qa`** levanta [`qa-app`](plugins/harness-web/tests/fixtures/qa-app) (tienda de ejemplo con 7 defectos y un control de pago) y ejecuta 18 specs dos veces: los 7 recorridos sanos pasan y los 11 specs de defectos fallan, con resultado idéntico en ambas corridas. Incluye el informe y las capturas reales de una exploración del agente: [`examples/qa-explorer-run`](examples/qa-explorer-run) (con su procedencia y límites: la auditoría del agente es no determinista y se hizo con una versión anterior de su política).
+- **`demo:sync`** creates a temporary project, runs the real CLI and exits 1 if any outcome differs from the expected one (including that the dry-run and the conflict leave the tree unchanged, and that rollback restores the original bytes). It also runs in CI on Ubuntu and Windows.
+- **`demo:qa`** starts [`qa-app`](plugins/harness-web/tests/fixtures/qa-app) (a small shop with 7 seeded defects and a payment control) and runs 18 Playwright specs twice through the trusted runner: the 7 healthy-journey specs pass and the 11 defect specs fail (they assert correct behaviour against the seeded defects), identically in both runs. It needs a runner with Playwright installed once:
+  `mkdir ~/.claude/harness/qa-runner && cd ~/.claude/harness/qa-runner && npm init -y && npm i @playwright/test && npx playwright install chromium`
+  (or pass `--runner <dir>` / set `HARNESS_QA_RUNNER`).
+- [`examples/qa-explorer-run`](examples/qa-explorer-run) contains the report, 24 screenshots and the specs from a real autonomous run of the `qa-explorer` agent against that app. Its README states the provenance: the agent run itself is non-deterministic and was made with an earlier version of the agent policy; only the specs are reproducible.
 
-## Calidad y verificación del propio Harness
+## Verification of the Harness itself
 
 ```bash
-npm test                 # hooks, política por agente, SyncProject, pagos, memoria, consistencia, fixture QA
-npm run check:skills     # frontmatter, nombres únicos, rutas citadas existentes
-npm run check:consistency# versiones (marketplace ↔ plugin ↔ lock ↔ CHANGELOG), hooks, permisos de agentes, privacidad, licencia
-npm run validate         # claude plugin validate --strict (marketplace y plugins)
+npm test                  # hooks, agent policy, SyncProject, payments references, memory linter, consistency checker, QA fixture
+npm run check:skills      # frontmatter, unique names, referenced paths exist
+npm run check:consistency # versions (marketplace, plugin.json, lock, CHANGELOG), hook scripts, agent tools, private paths, license files
+npm run validate          # claude plugin validate --strict for the marketplace and the five plugins (needs the claude CLI)
 ```
 
-El pipeline ([`.github/workflows/harness-ci.yml`](.github/workflows/harness-ci.yml)) ejecuta tests, *skills* y consistencia en **Ubuntu y Windows**, la validación estricta de plugins, `gitleaks` sobre todo el historial (binario con SHA-256 fijado) y el chequeo semanal de actualizaciones. Permisos mínimos (`contents: read`), acciones fijadas por SHA, sin despliegues, sin publicaciones, sin auto-merge. Estado actual: ver el badge de arriba y la pestaña *Actions*; no se citan cifras de CI que no estén en una ejecución concreta.
+CI ([`.github/workflows/harness-ci.yml`](.github/workflows/harness-ci.yml)) runs on push to `main` and on pull requests:
 
-### Módulos y sus pruebas
+- `test` on `ubuntu-latest` and `windows-latest` (Node 24): `npm test`, `check:skills`, `check:consistency`, `demo:sync`;
+- `plugins`: `claude plugin validate --strict` with Claude Code 2.1.316;
+- `secrets`: gitleaks 8.30.1 (SHA-256 pinned) over the full git history;
+- a weekly / manual `update-check` job that opens or updates an issue with outdated upstream components.
 
-| Módulo | Qué aporta | Qué se prueba |
-|---|---|---|
-| `harness-web` | `web-qa` (Playwright, axe, Lighthouse CI), `qa-explore`, diseño, `seo`, `owasp-security` | política del `qa-explorer`, runner de regresión, app con defectos sembrados |
-| `harness-saas` | multi-tenancy, auth y roles, APIs y webhooks, modelado/migraciones, buenas prácticas de PostgreSQL | validación de skills (contenido sin ejecutar contra un backend real: ver limitaciones) |
-| `harness-payments` | invariantes de pagos (backend como autoridad, idempotencia, webhook verificado), referencias de código y matriz G9 | tests de las referencias (firma, máquina de estados, webhook con deduplicación, esquema SQL) |
-| `harness-research` | investigación con evidencia y citas, análisis de datos | validación de skills |
+Workflow permissions are `contents: read`, except the weekly `update-check` job, which also has `issues: write` to open that issue. Actions are pinned by commit SHA. There are no deployments, publications or auto-merges. For the current CI status see the badge above and the repository's Actions tab.
 
-## Instalación y prueba
+`demo:qa` is not part of CI because it needs a browser runner.
 
-Requisitos: Node ≥ 22, Git y [Claude Code](https://claude.com/claude-code) (validado con 2.1.316). Los scripts Node se probaron en Windows 10 y Ubuntu (WSL2); los instaladores `.ps1` son de PowerShell (Windows).
+## Installation
+
+Requirements: Node ≥ 22, Git, and Claude Code (validated with 2.1.316). The Node scripts were tested on Windows 10 and on Ubuntu (WSL2), and in CI on `ubuntu-latest` and `windows-latest`. The installer scripts are PowerShell, so the installation below is documented and tested for **Windows only**; equivalent steps for Linux/macOS are not documented here.
+
+Verify without installing anything into Claude Code:
 
 ```bash
 git clone https://github.com/MarBlanco/ClaudeCode-agentes-skills.git
 cd ClaudeCode-agentes-skills
-npm test && npm run check:skills && npm run check:consistency   # verificar sin instalar nada
+npm test && npm run check:skills && npm run check:consistency
 npm run demo:sync
 ```
 
+Install into Claude Code (Windows / PowerShell):
+
 ```powershell
-# Instalación en Claude Code (Windows)
-.\scripts\install-harness.ps1 -Marketplace        # HARNESS.md + marketplace "harness" + harness-core (scope usuario)
-.\scripts\install-qa-tools.ps1                    # gitleaks, osv-scanner, actionlint, hadolint (SHA-256 verificado)
-# Módulos de proyecto: instalados pero deshabilitados a nivel usuario; cada proyecto los habilita con SyncProject
-claude plugin install harness-web@harness --scope user;      claude plugin disable harness-web --scope user
-claude plugin install harness-saas@harness --scope user;     claude plugin disable harness-saas --scope user
+.\scripts\install-harness.ps1 -Marketplace   # installs HARNESS.md, registers the "harness" marketplace, installs harness-core (user scope)
+.\scripts\install-qa-tools.ps1               # gitleaks, osv-scanner, actionlint, hadolint with SHA-256 verification (default: ~\.claude\harness\bin, change with -BinDir)
+
+# Project modules: install, then disable at user scope; each project enables what it needs through SyncProject
+claude plugin install harness-web@harness      --scope user; claude plugin disable harness-web      --scope user
+claude plugin install harness-saas@harness     --scope user; claude plugin disable harness-saas     --scope user
 claude plugin install harness-payments@harness --scope user; claude plugin disable harness-payments --scope user
+# Research: a general capability, left enabled at user scope
 claude plugin install harness-research@harness --scope user
 ```
 
-Runner de regresión para `demo:qa` (una vez): `mkdir ~/.claude/harness/qa-runner && cd ~/.claude/harness/qa-runner && npm init -y && npm i @playwright/test && npx playwright install chromium`.
+Optional: `scripts\install-harness.ps1 -CodebaseMemory <Status|Install|Update|Remove>` installs the third-party MIT-licensed [codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp) (checksum-verified) as a user-scope MCP server.
 
-`~/.claude/settings.json` conviene que lleve además `permissions.deny` para `Read/Edit` sobre `.env*`; el guard cubre el resto como segunda línea.
+## Known limitations
 
-## Tecnologías
+- **Skills are instructions, not guarantees.** Whether a skill is loaded depends on the model. The capability router and `harness-plan` improve this without guaranteeing it (partial spontaneous activation was measured in small tests; see `docs/CAPABILITIES.md`).
+- **No operating-system isolation** for `qa-explorer`; it is a tool policy plus a browser network restriction (see Security).
+- **Memory, session continuity and the model hint are assistance.** They were unit-tested but not measured over prolonged interactive use, and **no token or cost saving is claimed**.
+- **The exploratory run of `qa-explorer` is non-deterministic.** The included example is one real run, not a coverage guarantee.
+- **Guidance without a real-world run:** the contents of `harness-saas`, `seo`, `ops-delivery` and the observability reference have not been exercised against a real backend, site or deployment; `docs/CAPABILITIES.md` marks each item as implemented or verified according to what was actually checked. `harness-research` has no end-to-end research run recorded in this repository.
+- **Gates G3–G8 depend on the consumer project's tooling**; the Harness reports `NOT_CONFIGURED` when it is missing.
+- **macOS has not been tested.** Installation steps for Linux and macOS are not documented.
+- The `validate` step and the full plugin behaviour depend on the Claude Code version; only 2.1.316 was validated.
 
-Node.js (hooks y scripts `.mjs` sin dependencias de runtime, `node:test`), PowerShell (instaladores), formato de plugins y marketplaces de Claude Code, hooks de Claude Code, Playwright / `playwright-cli`, axe-core y Lighthouse CI (gates web), gitleaks y osv-scanner (G6), GitHub Actions, Mermaid (documentación).
-
-## Limitaciones conocidas
-
-- **Las skills son instrucciones, no garantías.** La activación de una skill depende del modelo; el enrutador y `harness-plan` la mejoran sin garantizarla (medido: activación espontánea parcial en pruebas pequeñas, ver `docs/CAPABILITIES.md` §6–7).
-- **Sin aislamiento de sistema operativo** para el `qa-explorer` (evaluado Docker/WSL/`--permission`; pendiente de decisión). Es una política de herramientas más una restricción de red del navegador.
-- **Memoria y modelo por tarea son asistencia**: los hooks de continuidad y la sugerencia de modelo no se midieron en uso interactivo prolongado; no se afirma ningún porcentaje de ahorro.
-- **Contenido de `harness-saas`, `seo`, `ops-delivery` y observabilidad** es guía sin ejecutar contra un backend o sitio real; la matriz de capacidades marca cada una como *Implementada* o *Verificada* según lo que se comprobó.
-- **La exploración autónoma del `qa-explorer` no es determinista**; el ejemplo incluido es una corrida real, no una garantía de cobertura.
-- Probado en Windows 10 y Ubuntu (WSL2) con Node 24; macOS no probado.
-
-## Estructura
+## Repository layout
 
 ```text
-.claude-plugin/marketplace.json   catálogo "harness"
+.claude-plugin/marketplace.json   marketplace "harness" (five plugins)
 plugins/harness-core/             skills/, agents/, hooks/ (Node .mjs), tests/
-plugins/harness-web/              skills/, agents/qa-explorer, scripts/qa-regression.mjs, tests/ (app con defectos sembrados)
+plugins/harness-web/              skills/, agents/qa-explorer, scripts/qa-regression.mjs, tests/ (seeded-defect app)
 plugins/harness-saas/             skills/
-plugins/harness-payments/         skills/ (con referencias testeadas), agents/
+plugins/harness-payments/         skills/ (with tested reference code), agents/, tests/
 plugins/harness-research/         skills/, agents/, NOTICE.md
-templates/profiles, templates/ci  perfiles de stack y workflows gestionados
-scripts/                          sync-project, install-*, check-*, demo-*, memory-lint, update-check, tests/
-examples/qa-explorer-run/         informe, capturas y specs reales de una exploración
-global/HARNESS.md                 reglas globales (se instalan como ~/.claude/HARNESS.md)
-harness.lock.json                 inventario versionado de cada componente y su procedencia
-docs/                             DECISIONS.md (ADR), CAPABILITIES.md
+templates/profiles/               stack profiles and module map
+templates/ci/                     CI workflow managed by SyncProject
+scripts/                          sync-project, install-*, check-*, demo-*, memory-lint, harness-update-check, tests/
+examples/qa-explorer-run/         report, screenshots and specs of a real exploratory run
+global/HARNESS.md                 global working rules (installed as ~/.claude/HARNESS.md)
+harness.lock.json                 versioned inventory of components and their provenance
+docs/                             DECISIONS.md (ADRs), CAPABILITIES.md
 ```
 
-## Actualización continua y reversión
+Upgrades and rollback: `npm run update-check` compares `harness.lock.json` with upstream sources (read-only). Critical components (hooks, permissions, payments, core) are never updated automatically. SyncProject keeps a backup per `--apply`; plugins are rolled back by lowering the version; the repository by Git.
 
-- `npm run update-check`: compara `harness.lock.json` con el upstream (releases, commits, npm). Solo lectura; en CI abre o actualiza un issue semanal.
-- Componentes críticos (hooks, permisos, pagos, core) nunca se actualizan solos: se prueban en rama y se actualiza el lock.
-- Reversión: SyncProject guarda un backup por `--apply` (`--rollback`); los plugins se revierten bajando la versión; el repo, con git.
+## License and attributions
 
-## Licencia y atribuciones
-
-Código y documentación propios: [Apache-2.0](LICENSE) © 2026 Martin Blanco ([NOTICE](NOTICE)). Las skills y scripts vendorizados de terceros (Anthropic, Vercel, Supabase, Microsoft, y otros MIT/Apache-2.0) conservan su licencia original; procedencia y commits fijados en [`harness.lock.json`](harness.lock.json), [`plugins/harness-research/NOTICE.md`](plugins/harness-research/NOTICE.md) y [`upstream-licenses.md`](plugins/harness-web/skills/qa-explore/references/upstream-licenses.md). `hadolint` (GPL-3.0) se usa solo como herramienta de línea de comandos, sin incorporarse al código.
+Original code and documentation: [Apache-2.0](LICENSE), © 2026 Martin Blanco ([NOTICE](NOTICE)). Vendored third-party skills and scripts (Anthropic, Vercel, Supabase, Microsoft and other MIT or Apache-2.0 sources) keep their original licenses; provenance and pinned commits are recorded in [`harness.lock.json`](harness.lock.json), [`plugins/harness-research/NOTICE.md`](plugins/harness-research/NOTICE.md) and [`upstream-licenses.md`](plugins/harness-web/skills/qa-explore/references/upstream-licenses.md). `hadolint` (GPL-3.0) is used only as a command-line tool and is not incorporated into the code.
