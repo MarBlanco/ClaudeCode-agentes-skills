@@ -1,0 +1,9 @@
+{
+  "name": "harness-mods",
+  "version": "0.6.0",
+  "description": "Mod de interfaz para Claude Code: botón «Modelo justo» (m) que sugiere o fija Haiku, Sonnet u Opus según la dificultad del prompt escrito, con reglas locales y sin llamar a ningún modelo.",
+  "author": {
+    "name": "Martin Blanco"
+  },
+  "license": "Apache-2.0"
+}

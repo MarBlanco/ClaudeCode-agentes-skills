@@ -1,5 +1,43 @@
 # Changelog
 
+## repo — 2026-11-07 (skill find-skills y perfil next-drizzle)
+
+### Agregado
+- Skill `find-skills` de Vercel (`vercel-labs/skills`, MIT) instalada en `.claude/skills/find-skills` con `npx skills@1.7.6 add https://github.com/vercel-labs/skills --skill find-skills --agent claude-code --copy -y` (sin telemetría). **Sin modificar**: el archivo es idéntico al upstream (commit `d3701c1`, comprobado por hash). Registro en `skills-lock.json` (generado por el CLI), `harness.lock.json` (vigilada por `update-check`) y `NOTICE`. Es una skill de mantenimiento del repo: no se distribuye con los plugins. Sugiere instalar skills de terceros con `-g -y`; en este Harness esa acción sigue exigiendo necesidad justificada y tu autorización.
+- Perfil `next-drizzle` (`templates/profiles/next-drizzle.json`): Next.js + Drizzle ORM sobre PostgreSQL local, módulos web y saas, gates G1–G6 y G8.
+- `check-skills`: 37 skills.
+
+
+## prompt-enhancer 0.1.0 — 2026-11-06 (Enhance que se ve en VS Code)
+
+### Nuevo
+- Plugin `prompt-enhancer` (scope usuario): el mod propio **Prompt Enhancer** creado en el proyecto del generador de cursos, con su nombre original (`prompt-enhancer`, botón **«Enhance (e)»**; allí se renombró después a `prompt`). Escribís tu idea en pocas palabras, pulsás el botón y se convierte en un prompt completo con **una llamada a Haiku** (esfuerzo bajo, respuesta de hasta 700 tokens); limpia comillas y bloques de código del resultado.
+- Se dibuja **siempre** que no haya un turno en curso, sin esperar eventos de edición: por eso se ve en el panel de VS Code, donde el Enhancer oficial de terceros (que muestra el botón solo cuando detecta un borrador de 2 palabras y 10 caracteres a través de eventos de edición) no aparecía. Compone la banda de otros mods con `next(e)`, de modo que «Modelo justo» y «Enhance» se ven a la vez.
+- 6 pruebas del motor (4 superficies, turno en curso, una sola llamada a Haiku, limpieza, prompt vacío, fallo del modelo); validación `--strict` y tipos.
+
+### Convivencia con `cc-prompt-enhance-mod`
+- Ambos usan el atajo «e»; en la instalación del autor el oficial queda **deshabilitado** (no desinstalado ni modificado) para evitar duplicados. Se vuelve a activar con `claude plugin enable cc-prompt-enhance-mod@harness --scope user`. ADR-020.
+
+### Límites
+- No probado en una sesión interactiva real, solo con el kit de pruebas del motor. Si `$.prompt.read` no entrega el borrador en algún panel, el botón avisa «Escribe una idea primero». Una llamada a Haiku por pulsación (consumo no medido).
+
+
+## cc-prompt-enhance-mod 0.1.0 · harness-mods 0.6.0 — 2026-11-06 (mods de interfaz)
+
+### Nuevo
+- **`cc-prompt-enhance-mod` 0.1.0** (plugin de scope usuario): el Prompt Enhancer oficial de **Yigit Budak** ([yibudak/cc-prompt-enhance-mod](https://github.com/yibudak/cc-prompt-enhance-mod), MIT), **incorporado sin ninguna modificación** (commit `8c19505`; 17 archivos idénticos byte a byte al repositorio oficial, comprobado por hash). Botón «Enhance» sobre el prompt: Sonnet afina el borrador usando los últimos 10 mensajes de la conversación; «Revert» deshace; Ctrl+E es opcional y se configura aparte en `~/.claude/keybindings.json` (el Harness no toca ese archivo). Atribución en `NOTICE` y en el `LICENSE` del propio plugin; `.gitattributes` evita que Git normalice sus saltos de línea. Su `plugin validate --strict` y sus 8 pruebas propias pasan.
+- **`harness-mods` 0.6.0** (scope usuario): contiene solo el mod de interfaz **«Modelo justo» (m)**, creado en el proyecto del generador de cursos: botón sobre el prompt que clasifica su dificultad y sugiere Haiku, Sonnet u Opus; intenta fijar el modelo si la versión de Claude Code lo permite desde un mod y, si no, muestra el `/model` sugerido. Reglas locales (`hooks/model-level.mjs`): **no llama a ningún modelo**. 4 pruebas del motor y 3 de las reglas.
+- CI: la validación de plugins usa Claude Code 2.1.319, la versión con la que se validaron los mods.
+
+### Retirado
+- Las versiones propias de «Prompt» (la ampliada con descubrimiento del Harness y la copia adaptada del mod del generador de cursos) **no forman parte del Harness**; el Enhancer es el oficial de terceros. Ver ADR-020.
+
+### Límites
+- No probados en una sesión interactiva real, solo con el kit de pruebas del motor. «Modelo justo» puede no poder fijar el modelo según la versión de Claude Code.
+- **Consumo del Enhancer oficial:** una llamada a Sonnet por pulsación con el borrador y hasta 12 000 caracteres de conversación (hasta 4096 tokens de salida); es bastante más que la versión simple con Haiku. No se midió aquí.
+- **Convivencia de botones (no verificada):** la banda del Enhancer oficial no compone la de otros plugins; según el orden de carga puede ocultar el botón de «Modelo justo» mientras el suyo se muestra.
+- ADR-019 y ADR-020.
+
 ## harness-core 0.12.2 · harness-payments 0.9.2 — 2026-11-05 (portabilidad, CI y demostraciones)
 
 ### Corregido

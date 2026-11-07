@@ -55,11 +55,14 @@ flowchart TD
 | `harness-web` | per project | Frontend engineering, design, web QA, accessibility, SEO, OWASP guidance; `qa-explorer` agent |
 | `harness-saas` | per project | SaaS architecture, APIs and webhooks, authentication, data modeling and migrations, multi-tenancy |
 | `harness-payments` | per project | Payment flows, backend authority, idempotency, webhook security; `payments-engineer` agent |
+| `harness-mods` | user | Interface mod for Claude Code: a model-picker button (rule-based, no model call) that suggests, or sets when the Claude Code version allows it, Haiku, Sonnet or Opus from the prompt difficulty. Tested with the engine test kit only, not in a real interactive session |
+| `prompt-enhancer` | user | Own Prompt Enhancer mod: an always-visible Enhance button that turns a short idea into a complete prompt with one Haiku call. Works in panels where the third-party enhancer below does not show its button (e.g. the VS Code panel) |
+| `cc-prompt-enhance-mod` | user | Third-party Prompt Enhancer by Yigit Budak ([upstream](https://github.com/yibudak/cc-prompt-enhance-mod), MIT), included **unmodified**: an Enhance button that uses Sonnet and the recent conversation to sharpen your draft; Revert undoes it. One Sonnet call per press (more tokens than a Haiku-only enhancer; not measured here) |
 | `harness-research` | user | Market and web research with explicit evidence classification; `market-researcher` agent |
 
 ### Project profiles
 
-`vite-supabase`, `next-supabase`, `next-payload` and `django-react` select the modules, permissions, gate commands and CI files for a stack. They do not replace a project's own architecture or configuration.
+`vite-supabase`, `next-supabase`, `next-payload`, `next-drizzle` and `django-react` select the modules, permissions, gate commands and CI files for a stack. They do not replace a project's own architecture or configuration.
 
 ## SyncProject v2
 
@@ -156,11 +159,11 @@ npm run demo:qa           # regression specs against a seeded-defect app (needs 
 - `demo:sync` runs the real CLI and exits non-zero if any outcome differs from the expected one.
 - `demo:qa` runs 18 specs twice against [`qa-app`](plugins/harness-web/tests/fixtures/qa-app), a small shop with seeded defects: the 7 healthy-journey specs pass and the 11 defect specs fail, identically in both runs. Runner setup and the provenance of the included real agent run: [`examples/qa-explorer-run`](examples/qa-explorer-run/README.md). It is not part of CI.
 
-**CI** ([workflow](.github/workflows/harness-ci.yml)) runs on push to `main` and on pull requests: tests, skill and consistency checks on Ubuntu and Windows, plugin validation with Claude Code 2.1.316, and a gitleaks scan of the full history. Actions are pinned by commit SHA; there are no deployments or releases. CI validates this repository's checks; it does not certify any consumer project.
+**CI** ([workflow](.github/workflows/harness-ci.yml)) runs on push to `main` and on pull requests: tests, skill and consistency checks on Ubuntu and Windows, plugin validation with Claude Code 2.1.319, and a gitleaks scan of the full history. Actions are pinned by commit SHA; there are no deployments or releases. CI validates this repository's checks; it does not certify any consumer project.
 
 ## Installation
 
-Requirements: Node ≥ 22, Git and Claude Code (validated with 2.1.316). The documented installation targets **Windows / PowerShell**; the repository has no runtime dependencies to install.
+Requirements: Node ≥ 22, Git and Claude Code (plugin validation and mods tested with 2.1.319; earlier hardening with 2.1.316). The documented installation targets **Windows / PowerShell**; the repository has no runtime dependencies to install.
 
 ```bash
 git clone https://github.com/MarBlanco/ClaudeCode-agentes-skills.git
@@ -177,11 +180,14 @@ claude plugin install harness-web@harness      --scope user; claude plugin disab
 claude plugin install harness-saas@harness     --scope user; claude plugin disable harness-saas     --scope user
 claude plugin install harness-payments@harness --scope user; claude plugin disable harness-payments --scope user
 claude plugin install harness-research@harness --scope user
+claude plugin install harness-mods@harness     --scope user   # optional: "Modelo justo" button
+claude plugin install prompt-enhancer@harness --scope user   # optional: own Enhance button
+claude plugin install cc-prompt-enhance-mod@harness --scope user   # optional: third-party Prompt Enhancer (terminal; same hotkey, enable only one)
 ```
 
 ## Current limitations
 
-- Claude Code 2.1.316 is the validated version. Windows is the documented installation platform; Ubuntu is covered by CI; **macOS has not been validated**.
+- Only Claude Code 2.1.316 (hardening) and 2.1.319 (plugin validation, mods) were exercised. Windows is the documented installation platform; Ubuntu is covered by CI; **macOS has not been validated**.
 - Skills are instructions, not guarantees: whether one is loaded depends on the model.
 - `qa-explorer` is exploratory and **non-deterministic**; it has no operating-system isolation.
 - Memory, session continuity and the model hint (`router.mjs`) are assistance. The model hint is only a suggestion — it does not switch the active model — and **no token or cost saving is claimed or measured**.
@@ -192,7 +198,7 @@ claude plugin install harness-research@harness --scope user
 
 ```text
 .claude-plugin/    marketplace catalogue
-plugins/           harness-core, harness-web, harness-saas, harness-payments, harness-research
+plugins/           harness-core, harness-web, harness-saas, harness-payments, harness-research, harness-mods
 templates/         stack profiles and managed CI workflow
 scripts/           sync-project, installers, checks, demos, tests
 examples/          real QA Explorer run (report, screenshots, specs)

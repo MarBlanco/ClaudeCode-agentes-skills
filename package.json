@@ -9,12 +9,13 @@
   "scripts": {
     "test": "node --test \"plugins/*/tests/*.test.mjs\" \"scripts/tests/*.test.mjs\"",
     "check:skills": "node scripts/check-skills.mjs",
-    "validate": "claude plugin validate --strict . && claude plugin validate --strict plugins/harness-core && claude plugin validate --strict plugins/harness-web && claude plugin validate --strict plugins/harness-saas && claude plugin validate --strict plugins/harness-payments && claude plugin validate --strict plugins/harness-research",
+    "validate": "claude plugin validate --strict . && claude plugin validate --strict plugins/harness-core && claude plugin validate --strict plugins/harness-web && claude plugin validate --strict plugins/harness-saas && claude plugin validate --strict plugins/harness-payments && claude plugin validate --strict plugins/harness-research && claude plugin validate --strict plugins/harness-mods && claude plugin validate --strict plugins/cc-prompt-enhance-mod && claude plugin validate --strict plugins/prompt-enhancer",
     "update-check": "node scripts/harness-update-check.mjs",
     "check:consistency": "node scripts/check-consistency.mjs",
     "demo:sync": "node scripts/demo-syncproject.mjs",
     "demo:qa": "node scripts/demo-qa-regression.mjs",
-    "memory-lint": "node scripts/memory-lint.mjs"
+    "memory-lint": "node scripts/memory-lint.mjs",
+    "test:mods": "claude plugin test plugins/harness-mods && claude plugin test plugins/prompt-enhancer && claude plugin test plugins/cc-prompt-enhance-mod"
   },
   "license": "Apache-2.0",
   "repository": {

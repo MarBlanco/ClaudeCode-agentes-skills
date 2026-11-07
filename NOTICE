@@ -7,3 +7,13 @@ This repository bundles third-party material under its original licenses
 (MIT / Apache-2.0). Provenance and pinned commits: harness.lock.json,
 plugins/harness-research/NOTICE.md and
 plugins/harness-web/skills/qa-explore/references/upstream-licenses.md.
+
+cc-prompt-enhance-mod (plugins/cc-prompt-enhance-mod)
+Copyright (c) Yigit Budak, MIT License (see plugins/cc-prompt-enhance-mod/LICENSE).
+Upstream: https://github.com/yibudak/cc-prompt-enhance-mod @ 8c19505f372c09497e6aaf9413d251d8fb8dc0b3.
+Incorporated unmodified (byte-identical to the upstream commit).
+
+find-skills (.claude/skills/find-skills)
+Copyright (c) Vercel, Inc., MIT License (https://github.com/vercel-labs/skills/blob/main/LICENSE).
+Upstream: https://github.com/vercel-labs/skills @ d3701c11b1101251af14c9d148f026e1a47ebe17, path skills/find-skills.
+Installed with `npx skills@1.7.6 add`; unmodified (identical to the upstream file). Lock: skills-lock.json.

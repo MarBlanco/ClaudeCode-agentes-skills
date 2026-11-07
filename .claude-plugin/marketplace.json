@@ -35,6 +35,24 @@
       "description": "Investigación e inteligencia de producto: mercado y web con niveles de evidencia, competencia, estrategia de producto y marketing, análisis de datos.",
       "source": "./plugins/harness-research",
       "category": "productivity"
+    },
+    {
+      "name": "harness-mods",
+      "description": "Mod de interfaz para Claude Code: botón «Modelo justo» que sugiere o fija Haiku, Sonnet u Opus según la dificultad del prompt, con reglas locales y sin llamar a ningún modelo.",
+      "source": "./plugins/harness-mods",
+      "category": "productivity"
+    },
+    {
+      "name": "cc-prompt-enhance-mod",
+      "description": "Prompt Enhancer (de Yigit Budak, MIT, sin modificar): botón Enhance sobre el prompt; Sonnet afina el borrador usando la conversación reciente.",
+      "source": "./plugins/cc-prompt-enhance-mod",
+      "category": "productivity"
+    },
+    {
+      "name": "prompt-enhancer",
+      "description": "Botón «Enhance» sobre el prompt: convierte una idea corta en un prompt completo con una llamada a Haiku. Se dibuja siempre, también en el panel de VS Code.",
+      "source": "./plugins/prompt-enhancer",
+      "category": "productivity"
     }
   ]
 }

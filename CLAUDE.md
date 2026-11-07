@@ -15,9 +15,9 @@ No contiene código de producto ni depende de proyectos consumidores concretos.
 - `global/HARNESS.md`: reglas globales reutilizables. Se instala como `~/.claude/HARNESS.md`.
 - `CLAUDE.md`: reglas de este repositorio (las globales llegan por `~/.claude/CLAUDE.md`, no por import).
 - `.claude-plugin/marketplace.json`: catálogo del marketplace privado `harness`.
-- `plugins/harness-core|harness-web|harness-saas|harness-payments/`: plugins (skills, agentes, hooks, tests).
+- `plugins/harness-core|harness-web|harness-saas|harness-payments|harness-research|harness-mods|prompt-enhancer|cc-prompt-enhance-mod/` (el último es de terceros y no se edita): plugins (skills, agentes, hooks, tests).
 - `docs/CAPABILITIES.md`: matriz de capacidades, inventario, fuentes, controles preventivos vs. de instrucciones y pruebas.
-- `.claude/skills/`: Skills de mantenimiento del propio repo (`skill-creator`, `skill-development`); no se distribuyen.
+- `.claude/skills/`: Skills de mantenimiento del propio repo (`skill-creator`, `skill-development`, `find-skills` de Vercel instalada con `npx skills add`, MIT, sin modificar; `skills-lock.json`); no se distribuyen. `find-skills` sugiere instalar skills de terceros: aplicar siempre la regla de este documento (necesidad justificada y autorización del usuario) antes de instalar.
 - `templates/profiles/`: perfiles de stack y módulos. `templates/ci/`: archivos de CI gestionados.
 - `scripts/`: `install-harness.ps1` (HARNESS.md, `-Marketplace`, `-CodebaseMemory`), `sync-project.mjs|.ps1` (SyncProject v2), `harness-update-check.mjs`, `install-qa-tools.ps1`, `check-skills.mjs` y sus tests.
 - `harness.lock.json`: inventario versionado de todos los componentes.
@@ -31,6 +31,9 @@ No contiene código de producto ni depende de proyectos consumidores concretos.
 | `harness-web` (por proyecto) | `frontend-design`, `design-loop`, `web-design-guidelines`, `vercel-react-best-practices`, `vercel-composition-patterns`, `playwright-cli`, `chrome-devtools`, `web-qa`, `qa-explore`, `seo`, `owasp-security` | `qa-explorer` (Write solo en la corrida; Bash solo `playwright-cli`; red del navegador limitada a localhost; no ejecuta specs — ADR-014) |
 | `harness-saas` (por proyecto) | `saas-architecture`, `api-design`, `data-modeling-migrations`, `supabase-postgres-best-practices` | — |
 | `harness-payments` (por proyecto) | `payments-core`, `payments-review` | `payments-engineer` |
+| `harness-mods` (usuario) | — (mod de interfaz: botón «Modelo justo» sobre el prompt; ADR-019) | — |
+| `prompt-enhancer` (usuario) | — (mod de interfaz: botón «Enhance» sobre el prompt, siempre visible; ADR-020) | — |
+| `cc-prompt-enhance-mod` (usuario, de terceros, sin modificar) | — (mod de interfaz: botón «Enhance» sobre el prompt; ADR-020) | — |
 | `harness-research` (usuario) | `market-research`, `web-research`, `competitive-brief`, `campaign-plan`, `product-brainstorming`, `statistical-analysis`, `validate-data` (las cinco últimas de Anthropic, Apache-2.0) | `market-researcher` (solo lectura, web) |
 
 En sesión aparecen con prefijo de plugin (`harness-core:harness-work`). Hooks de `harness-core`: guard de secretos/lockfiles/migraciones/operaciones destructivas y política por agente (`qa-explorer`), anuncio de perfil y capacidades, enrutador de capacidades y sugerencia de modelo por pedido, continuidad de sesión, entregables de `qa-explorer` al terminar, typecheck en Stop y formato (según el manifiesto del proyecto).

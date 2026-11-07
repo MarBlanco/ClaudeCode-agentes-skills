@@ -58,7 +58,7 @@ jobs:
           node-version: '24'
       - name: Validación estricta de marketplace y plugins
         run: |
-          npm install -g @anthropic-ai/claude-code@2.1.316
+          npm install -g @anthropic-ai/claude-code@2.1.319
           npm run validate
 
   secrets:

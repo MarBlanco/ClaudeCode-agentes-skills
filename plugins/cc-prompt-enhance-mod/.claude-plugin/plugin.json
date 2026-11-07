@@ -1,0 +1,20 @@
+{
+  "name": "cc-prompt-enhance-mod",
+  "version": "0.1.0",
+  "description": "Enhance button above the prompt: Sonnet sharpens your draft using the recent conversation",
+  "author": {
+    "name": "Yigit Budak",
+    "email": "yibudak@gmail.com",
+    "url": "https://github.com/yibudak"
+  },
+  "homepage": "https://github.com/yibudak/cc-prompt-enhance-mod",
+  "repository": "https://github.com/yibudak/cc-prompt-enhance-mod",
+  "license": "MIT",
+  "keywords": [
+    "mod",
+    "prompt",
+    "enhance",
+    "sonnet"
+  ],
+  "types": "./types/index.d.ts"
+}

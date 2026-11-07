@@ -1,0 +1,2 @@
+# Archivos de terceros incorporados sin modificar: Git no los normaliza.
+plugins/cc-prompt-enhance-mod/** -text

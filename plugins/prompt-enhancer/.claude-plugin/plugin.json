@@ -1,0 +1,10 @@
+{
+  "name": "prompt-enhancer",
+  "version": "0.1.0",
+  "description": "Botón Enhance (e) sobre el prompt: convierte una idea corta en un prompt completo.",
+  "author": {
+    "name": "Martin Blanco"
+  },
+  "license": "Apache-2.0",
+  "types": "./types/index.d.ts"
+}

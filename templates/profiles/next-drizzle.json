@@ -1,0 +1,69 @@
+{
+  "name": "next-drizzle",
+  "description": "Next.js + Drizzle ORM sobre PostgreSQL local (docker compose), con tests Vitest y Playwright, preparado para evolucionar a SaaS (tenants, auth, APIs, datos).",
+  "detect": {
+    "anyPackageDependsOn": [
+      "next",
+      "drizzle-orm"
+    ]
+  },
+  "modules": [
+    "web",
+    "saas"
+  ],
+  "settings": {
+    "permissions": {
+      "deny": [
+        "mcp__rea"
+      ]
+    }
+  },
+  "mcpServers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "next-devtools-mcp@0.4.0"
+      ]
+    }
+  },
+  "gates": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5",
+    "G6",
+    "G8"
+  ],
+  "gateCommands": {
+    "G1": [
+      "npm run typecheck",
+      "npm run lint",
+      "npm run build"
+    ],
+    "G2": "npm test",
+    "G3": "npm run test:e2e",
+    "G6": [
+      "gitleaks git --no-banner --redact -v .",
+      "osv-scanner scan source -r ."
+    ]
+  },
+  "gateNotes": {
+    "G8": "solo base local y de pruebas (docker compose); nunca producción"
+  },
+  "quality": {
+    "typecheck": {
+      "command": "npm run typecheck",
+      "extensions": [
+        ".ts",
+        ".tsx"
+      ],
+      "timeoutSec": 240
+    }
+  },
+  "ciFiles": [
+    "security-workflow",
+    "dependabot"
+  ]
+}

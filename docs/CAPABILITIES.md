@@ -1,6 +1,6 @@
 # Capacidades del Harness: matriz, fuentes y controles
 
-Estado al 2026-11-05 · harness-core 0.12.2 · harness-web 0.12.6 · harness-saas 0.1.1 · harness-payments 0.9.2 · harness-research 0.1.1. Las versiones vigentes se verifican con `npm run check:consistency` (marketplace ↔ plugin.json ↔ `harness.lock.json` ↔ CHANGELOG).
+Estado al 2026-11-05 · harness-core 0.12.2 · harness-web 0.12.6 · harness-saas 0.1.1 · harness-payments 0.9.2 · harness-research 0.1.1 · harness-mods 0.6.0 · prompt-enhancer 0.1.0 · cc-prompt-enhance-mod 0.1.0 (de terceros, sin modificar). Las versiones vigentes se verifican con `npm run check:consistency` (marketplace ↔ plugin.json ↔ `harness.lock.json` ↔ CHANGELOG).
 
 ## 1. Arquitectura
 
@@ -24,7 +24,7 @@ Estado al 2026-11-05 · harness-core 0.12.2 · harness-web 0.12.6 · harness-saa
 
 Flujo: `product-spec → architecture-decisions → (capacidades de diseño) → harness-plan → harness-work (implementa → qa-verifier → code-reviewer → reparación ≤3) → ops-delivery / tech-docs`. Enrutador por fase: `plugins/harness-core/skills/harness-plan/references/capabilities.md`.
 
-## 2. Matriz de capacidades (22 originales y 3 posteriores)
+## 2. Matriz de capacidades (22 originales y 6 posteriores)
 
 Leyenda de verificación: **R** registro (Claude Code 2.1.288 lista la skill/agente en una sesión headless) · **I** invocación real en una tarea · **T** tests automatizados · **H** herramienta ejecutada contra archivos reales · **E** heredado de versiones anteriores, no vuelto a probar en esta tarea.
 
@@ -55,13 +55,16 @@ Leyenda de verificación: **R** registro (Claude Code 2.1.288 lista la skill/age
 | 23 | Investigación y datos | `harness-research` (7 skills, agente `market-researcher`) | Anthropic (Apache-2.0, 5 vendorizadas) + original | Implementada | R y `check:skills`. No hay en este repositorio una investigación real ejecutada de punta a punta como prueba |
 | 24 | Memoria y continuidad entre sesiones | `memory-policy`, `scripts/memory-lint.mjs`, `continuity.mjs` | original sobre la memoria nativa de Claude Code | Implementada | T: 7 tests de continuidad (estado, interrupción, compactación) y 3 del linter. Los hooks no se probaron en una sesión interactiva real; el efecto sobre el uso de tokens no está medido (ADR-018) |
 | 25 | Modelo por tarea | `router.mjs` (`modelHint`), `harness-work/references/model-routing.md`, modelos fijados por agente | original | Implementada como **sugerencia** | T. Un hook no puede cambiar el modelo: el modelo principal decide si delega con `model=`. Ahorro no medido |
+| 26 | Mod de interfaz: modelo justo | `harness-mods` | original (creado en el generador de cursos) | Implementada | T: 4 pruebas del motor (4 superficies, turno en curso, sugerencia por dificultad, prompt vacío) y 3 de las reglas; validación `--strict`, tipos; Ubuntu y Windows. Reglas locales: no llama a ningún modelo. No probado en una sesión interactiva real; puede no poder fijar el modelo según la versión (se muestra el `/model` sugerido) |
+| 27 | Prompt Enhancer (tercero) | `cc-prompt-enhance-mod` | Yigit Budak (MIT), incorporado **sin modificar** (`8c19505`) | Incorporada | H: 17 archivos idénticos al upstream (hash); `plugin validate --strict` y las 8 pruebas del propio mod pasan. Código revisado: una llamada a Sonnet por pulsación, sin archivos ni red. No probado en una sesión interactiva real; consumo no medido; su banda no compone la de otros plugins |
+| 28 | Prompt Enhancer propio (botón «Enhance») | `prompt-enhancer` | original (creado en el generador de cursos) | Implementada | T: 6 pruebas del motor (4 superficies, siempre visible, una sola llamada a Haiku, limpieza, prompt vacío, fallo); validación `--strict`, tipos. Una llamada a Haiku por pulsación (no medido). No probado en una sesión interactiva real |
 
 ## 3. Inventario
 
 | Tipo | Elementos |
 |---|---|
-| Plugins del harness | `harness-core` 0.12.2 · `harness-web` 0.12.6 · `harness-saas` 0.1.1 · `harness-payments` 0.9.2 · `harness-research` 0.1.1 |
-| Skills (36 en total, verificadas por `check:skills`) | core (10): harness-plan, harness-work, harness-review, systematic-debugging, product-spec, architecture-decisions, ops-delivery, tech-docs, maintenance-upgrades, memory-policy · web: frontend-design, design-loop, web-design-guidelines, vercel-react-best-practices, vercel-composition-patterns, playwright-cli, chrome-devtools, web-qa, qa-explore, seo, owasp-security · saas: saas-architecture, api-design, data-modeling-migrations, supabase-postgres-best-practices · payments: payments-core, payments-review · research (7): market-research, web-research, competitive-brief, campaign-plan, product-brainstorming, statistical-analysis, validate-data · repo (no se distribuyen): skill-creator, skill-development |
+| Plugins del harness | `harness-core` 0.12.2 · `harness-web` 0.12.6 · `harness-saas` 0.1.1 · `harness-payments` 0.9.2 · `harness-research` 0.1.1 · `harness-mods` 0.6.0 · `prompt-enhancer` 0.1.0 · `cc-prompt-enhance-mod` 0.1.0 (tercero) |
+| Skills (37 en total, verificadas por `check:skills`) | core (10): harness-plan, harness-work, harness-review, systematic-debugging, product-spec, architecture-decisions, ops-delivery, tech-docs, maintenance-upgrades, memory-policy · web: frontend-design, design-loop, web-design-guidelines, vercel-react-best-practices, vercel-composition-patterns, playwright-cli, chrome-devtools, web-qa, qa-explore, seo, owasp-security · saas: saas-architecture, api-design, data-modeling-migrations, supabase-postgres-best-practices · payments: payments-core, payments-review · research (7): market-research, web-research, competitive-brief, campaign-plan, product-brainstorming, statistical-analysis, validate-data · repo (no se distribuyen): skill-creator, skill-development, find-skills (Vercel, MIT, sin modificar) |
 | Agentes | `code-reviewer`, `qa-verifier` (core) · `qa-explorer` (web) · `payments-engineer` (payments) · `market-researcher` (research). No se agregaron más: las capacidades nuevas son metodología, no roles independientes |
 | Hooks (harness-core) | `guard.mjs` (PreToolUse), `agent-policy.mjs` (llamado desde el guard), `session-start.mjs`, `router.mjs` (UserPromptSubmit), `continuity.mjs` (SessionStart, UserPromptSubmit, Stop, SessionEnd), `qa-complete.mjs` (SubagentStop), `quality.mjs` (PostToolUse formato; Stop typecheck) |
 | MCP | chrome-devtools (usuario), codebase-memory (usuario, opcional), next-devtools (por perfil), mercadopago (proyecto), context7 (requiere autorización del usuario) |
