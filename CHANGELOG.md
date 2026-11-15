@@ -1,5 +1,17 @@
 # Changelog
 
+## repo — 2026-11-08 (mantenimiento: alertas de deriva y actualizaciones)
+
+### Cambiado
+- Skills vendorizadas resincronizadas con su upstream, tras revisar el diff completo (solo texto; sin cambios locales previos, salvo la `LICENSE` de owasp-security): `playwright-cli` `0a80807` → `745fbc7` (+2 líneas en `running-code.md`); `systematic-debugging` `2ce8aa1` → `22f0b46` (upstream retiró `CREATION-LOG.md` y `test-*.md`, archivos de desarrollo); `owasp-security` `8ac7965` → `e6ba0f4` (correcciones de precisión en 4 referencias).
+- CLIs globales: `@playwright/cli` 0.1.22 → 0.1.23, `typescript-language-server` 6.0.2 → 6.0.3. Plugin `caveman` 4.0.1 → 4.1.0.
+
+### Corregido (deriva instalado ≠ lock)
+- `harness.lock.json` ahora refleja lo instalado, que ya era la última versión del marketplace: `security-guidance` 2.0.18, `claude-security` 0.12.0 (el lock tenía 0.12.1, que el marketplace no ofrece), `context7` `0412be76f50a`, `runtime:claude-code` 2.1.319 (ya instalado).
+
+### Pendiente
+- `@playwright/test` 1.64.1 → 1.65.0 y `@lhci/cli` 0.15.1 → 0.16.0 (herramientas de QA por proyecto; 0.x puede traer cambios incompatibles): requieren validar la web-qa en un proyecto consumidor antes de subir el lock.
+
 ## repo — 2026-11-07 (skill find-skills y perfil next-drizzle)
 
 ### Agregado
