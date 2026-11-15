@@ -15,7 +15,7 @@ No contiene código de producto ni depende de proyectos consumidores concretos.
 - `global/HARNESS.md`: reglas globales reutilizables. Se instala como `~/.claude/HARNESS.md`.
 - `CLAUDE.md`: reglas de este repositorio (las globales llegan por `~/.claude/CLAUDE.md`, no por import).
 - `.claude-plugin/marketplace.json`: catálogo del marketplace privado `harness`.
-- `plugins/harness-core|harness-web|harness-saas|harness-payments|harness-research|harness-mods|prompt-enhancer|cc-prompt-enhance-mod/` (el último es de terceros y no se edita): plugins (skills, agentes, hooks, tests).
+- `plugins/harness-core|harness-web|harness-saas|harness-payments|harness-research|harness-content|harness-mods|prompt-enhancer|cc-prompt-enhance-mod/` (el último es de terceros y no se edita): plugins (skills, agentes, hooks, tests).
 - `docs/CAPABILITIES.md`: matriz de capacidades, inventario, fuentes, controles preventivos vs. de instrucciones y pruebas.
 - `.claude/skills/`: Skills de mantenimiento del propio repo (`skill-creator`, `skill-development`, `find-skills` de Vercel instalada con `npx skills add`, MIT, sin modificar; `skills-lock.json`); no se distribuyen. `find-skills` sugiere instalar skills de terceros: aplicar siempre la regla de este documento (necesidad justificada y autorización del usuario) antes de instalar.
 - `templates/profiles/`: perfiles de stack y módulos. `templates/ci/`: archivos de CI gestionados.
@@ -31,6 +31,7 @@ No contiene código de producto ni depende de proyectos consumidores concretos.
 | `harness-web` (por proyecto) | `frontend-design`, `design-loop`, `web-design-guidelines`, `vercel-react-best-practices`, `vercel-composition-patterns`, `playwright-cli`, `chrome-devtools`, `web-qa`, `qa-explore`, `seo`, `owasp-security` | `qa-explorer` (Write solo en la corrida; Bash solo `playwright-cli`; red del navegador limitada a localhost; no ejecuta specs — ADR-014) |
 | `harness-saas` (por proyecto) | `saas-architecture`, `api-design`, `data-modeling-migrations`, `supabase-postgres-best-practices` | — |
 | `harness-payments` (por proyecto) | `payments-core`, `payments-review` | `payments-engineer` |
+| `harness-content` (por proyecto, módulo `content`) | 13 de Instagram (`ig-reel`, `ig-caption`, `ig-carousel`, `ig-story`, `ig-comment`, `ig-reply`, `ig-dm`, `ig-plan`, `ig-audit`, `ig-profile`, `ig-repurpose`, `ig-human`, `ig-viral`; MIT) y 3 de HyperFrames (`hyperframes`, `hyperframes-cli`, `hyperframes-registry`; Apache-2.0); de terceros, sin modificar | — |
 | `harness-mods` (usuario) | — (mod de interfaz: botón «Modelo justo» sobre el prompt; ADR-019) | — |
 | `prompt-enhancer` (usuario) | — (mod de interfaz: botón «Enhance» sobre el prompt, siempre visible; ADR-020) | — |
 | `cc-prompt-enhance-mod` (usuario, de terceros, sin modificar) | — (mod de interfaz: botón «Enhance» sobre el prompt; ADR-020) | — |

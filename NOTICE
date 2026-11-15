@@ -17,3 +17,9 @@ find-skills (.claude/skills/find-skills)
 Copyright (c) Vercel, Inc., MIT License (https://github.com/vercel-labs/skills/blob/main/LICENSE).
 Upstream: https://github.com/vercel-labs/skills @ d3701c11b1101251af14c9d148f026e1a47ebe17, path skills/find-skills.
 Installed with `npx skills@1.7.6 add`; unmodified (identical to the upstream file). Lock: skills-lock.json.
+
+harness-content (plugins/harness-content)
+Skills de Instagram: Copyright (c) 2026 Jake Schincariol, MIT License (plugins/harness-content/LICENSE-instagram-agent-skill-mit.txt).
+Upstream: https://github.com/Jakeschincariol/instagram-agent-skill @ d03c56bb598be770c60b201f94237e5d1a4268a6. Incorporadas sin modificar.
+Skills de HyperFrames: Apache License 2.0, HeyGen (plugins/harness-content/LICENSE-hyperframes-apache-2.0.txt).
+Upstream: https://github.com/heygen-com/hyperframes @ 064c4365578e8e019b0180c74d0b3da49e9362d9 (v0.9.54), path skills/{hyperframes,hyperframes-cli,hyperframes-registry}. Incorporadas sin modificar.

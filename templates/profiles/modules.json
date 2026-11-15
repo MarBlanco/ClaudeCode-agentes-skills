@@ -15,5 +15,10 @@
     "enabledPlugins": {
       "harness-saas@harness": true
     }
+  },
+  "content": {
+    "enabledPlugins": {
+      "harness-content@harness": true
+    }
   }
 }

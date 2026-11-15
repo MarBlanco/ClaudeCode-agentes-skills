@@ -59,6 +59,7 @@ flowchart TD
 | `prompt-enhancer` | user | Own Prompt Enhancer mod: an always-visible Enhance button that turns a short idea into a complete prompt with one Haiku call. Works in panels where the third-party enhancer below does not show its button (e.g. the VS Code panel) |
 | `cc-prompt-enhance-mod` | user | Third-party Prompt Enhancer by Yigit Budak ([upstream](https://github.com/yibudak/cc-prompt-enhance-mod), MIT), included **unmodified**: an Enhance button that uses Sonnet and the recent conversation to sharpen your draft; Revert undoes it. One Sonnet call per press (more tokens than a Haiku-only enhancer; not measured here) |
 | `harness-research` | user | Market and web research with explicit evidence classification; `market-researcher` agent |
+| `harness-content` | per project | Marketing content and video: 13 Instagram skills (Reels with scored hooks, captions, carousels, replies, DMs, audits; MIT) and 3 HyperFrames skills (HTML to video; Apache-2.0), vendored unmodified |
 
 ### Project profiles
 
@@ -198,7 +199,7 @@ claude plugin install cc-prompt-enhance-mod@harness --scope user   # optional: t
 
 ```text
 .claude-plugin/    marketplace catalogue
-plugins/           harness-core, harness-web, harness-saas, harness-payments, harness-research, harness-mods
+plugins/           harness-core, harness-web, harness-saas, harness-payments, harness-research, harness-content, harness-mods
 templates/         stack profiles and managed CI workflow
 scripts/           sync-project, installers, checks, demos, tests
 examples/          real QA Explorer run (report, screenshots, specs)

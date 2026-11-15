@@ -17,6 +17,8 @@ Seleccionar solo las que la tarea necesita. Una skill de un plugin no activado e
 | Planificar | Alcance, riesgo, gates | `harness-plan` | core |
 | Implementar | Coordinar y reparar | `harness-work` | core |
 | Implementar | React/Next | `vercel-react-best-practices`, `vercel-composition-patterns` | web |
+| Implementar | Contenido de Instagram: Reels con ganchos puntuados, epígrafes, carruseles, historias, comentarios, respuestas, mensajes, plan y auditoría | `ig-reel`, `ig-caption`, `ig-carousel`, `ig-story`, `ig-comment`, `ig-reply`, `ig-dm`, `ig-plan`, `ig-audit`, `ig-profile`, `ig-repurpose`, `ig-human`, `ig-viral` (en inglés; adaptar al español) | content |
+| Implementar | Video desde HTML (reels, explicativos, subtítulos, animación) | `hyperframes`, `hyperframes-cli`, `hyperframes-registry` | content |
 | Implementar | Pagos y suscripciones (proveedor) | `payments-core`, agente `payments-engineer` | payments |
 | Verificar | Gates G1–G9 con evidencia | agente `qa-verifier` | core |
 | Verificar | E2E, visual, a11y, performance | `web-qa`; automatizar navegador: `playwright-cli` | web |

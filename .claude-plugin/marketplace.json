@@ -37,6 +37,12 @@
       "category": "productivity"
     },
     {
+      "name": "harness-content",
+      "description": "Contenido de marketing y video: skills de Instagram (Reels, epígrafes, carruseles, respuestas) y de HyperFrames (HTML a video). Se activa por proyecto.",
+      "source": "./plugins/harness-content",
+      "category": "productivity"
+    },
+    {
       "name": "harness-mods",
       "description": "Mod de interfaz para Claude Code: botón «Modelo justo» que sugiere o fija Haiku, Sonnet u Opus según la dificultad del prompt, con reglas locales y sin llamar a ningún modelo.",
       "source": "./plugins/harness-mods",

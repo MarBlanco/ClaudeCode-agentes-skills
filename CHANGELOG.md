@@ -1,5 +1,17 @@
 # Changelog
 
+## harness-core 0.12.3 · harness-content 0.1.0 — 2026-11-15 (contenido de marketing y video)
+
+### Agregado
+- Plugin `harness-content` (scope proyecto, módulo `content`): 13 skills de Instagram (MIT, Jake Schincariol) y 3 de HyperFrames (Apache-2.0, HeyGen), de terceros y sin modificar, con commit fijado, verificación byte a byte y revisión previa de scripts (ADR-021).
+- Módulo `content` en `templates/profiles/modules.json` y entrada en el marketplace y en `harness.lock.json`.
+
+### Cambiado
+- `harness-core` 0.12.3: el enrutador de capacidades (`harness-plan/references/capabilities.md`) incluye contenido de Instagram y video desde HTML.
+
+### Pendiente
+- Probar un render real con HyperFrames; adaptar al español la lógica de las skills de Instagram antes de llevarla a una app.
+
 ## repo — 2026-11-08 (mantenimiento: alertas de deriva y actualizaciones)
 
 ### Cambiado
