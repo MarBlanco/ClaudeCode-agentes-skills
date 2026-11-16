@@ -156,3 +156,12 @@ Registro breve de decisiones del harness (formato ADR). Una decisión nueva que 
 - **No incorporado:** `content-factory` y `comment-responder` (publican y mandan mensajes solos por Composio: contradicen la publicación manual), `reel-builder` (render con Runway/Seedance, gasto fuera de `credit-guard`), `agent-reach` (CLIs y cookies de terceros), y el resto por solaparse. `virality` se basa en una sola cuenta ajena (262 posts) y no está validada para velas y aromas; queda fuera hasta probarla.
 - **Riesgos:** son 6 descripciones más en el contexto del proyecto que active el módulo. Al ser una traducción propia, ya no son copias exactas y no se resincronizan por hash: una actualización del original se revisa y se traduce a mano. Su calidad es la de una plantilla de un párrafo; no reemplazan a `creative-director`.
 - **Reversión:** borrar las 6 carpetas, `LICENSE-ootto-content-skills-mit.txt`, sus filas en `NOTICE.md`/`NOTICE`, `harness.lock.json` y volver `harness-content` a 0.1.0.
+
+## ADR-023 · harness-web: transiciones de vista con la skill oficial de Vercel (2026-11-16)
+
+- **Contexto:** se evaluó incorporar crossfade, elemento compartido, ampliación y desenfoque para interfaces web. Una propuesta externa sugería escribir una skill propia `ui-motion-design`.
+- **Decisión:** no escribir una skill propia. `design-loop` (`references/motion-bar.md`) ya fija duraciones, curvas, feedback de hover y `prefers-reduced-motion`; lo que faltaba era la mecánica de transiciones entre vistas, que cubre la skill oficial `react-view-transitions` de Vercel (MIT), incorporada sin modificar a `harness-web` con el commit ya fijado de su repositorio y verificación por hash de Git.
+- **Ampliación y desenfoque:** no hay skill ni regla nueva. La ampliación de hover cae dentro de las reglas de `motion-bar.md` (1–2 px o escala no menor a 0,96; 180 ms como máximo) y el desenfoque (`backdrop-filter`) se limita en cada proyecto a overlays y modales, sin animarlo en móviles. `motion-bar.md` es de terceros (`design-loop`) y no se modifica.
+- **Requisito:** `ViewTransition` y `addTransitionType` son estables desde React 19.3; en Next.js no se instala `react@canary`. En proyectos con una versión anterior no aplican. No se probó todavía en una app real de este entorno.
+- **Riesgos:** suma una descripción más al contexto de los proyectos con módulo `web` y casi 60 KB de referencias que se leen solo al usarla.
+- **Reversión:** borrar `plugins/harness-web/skills/vercel-react-view-transitions`, su entrada en `harness.lock.json` y volver `harness-web` a 0.12.6.

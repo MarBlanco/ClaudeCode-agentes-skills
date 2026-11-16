@@ -1,5 +1,10 @@
 # Changelog
 
+## harness-web 0.12.7 — 2026-11-16 (transiciones de vista de React)
+
+### Agregado
+- Skill `vercel-react-view-transitions` (Vercel, MIT) en `harness-web`, sin modificar, mismo commit fijado que `vercel-react-best-practices` (`1a2c79d4`), 9 archivos verificados por hash de Git (ADR-023). Cubre elemento compartido, crossfade de entrada y salida, revelado con Suspense, identidad en listas y su uso en Next.js.
+
 ## harness-content 0.2.0 — 2026-11-16 (6 skills de producción y medición)
 
 ### Agregado
