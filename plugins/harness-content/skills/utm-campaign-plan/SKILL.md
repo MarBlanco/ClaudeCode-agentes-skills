@@ -1,45 +1,42 @@
 ---
 name: utm-campaign-plan
-description: Use when a campaign needs a consistent, approved way to label links so the team can distinguish sources and make later reporting possible. Trigger phrases include "plan our UTMs", "name campaign links", "make tracking links", "how should we tag creator links?", and "set up attribution for this launch". Do not use this to claim analytics access, create tracking without consent or policy review, or decide campaign strategy; use campaign-brief for the campaign source, paid-social-brief for media requirements, and social-analytics-report to interpret available data.
+description: Usar cuando una campaña necesita una forma consistente y aprobada de etiquetar enlaces, para distinguir las fuentes y poder reportar después. Frases típicas "planificá los UTM", "poné nombre a los enlaces de la campaña", "armá enlaces con seguimiento", "cómo etiquetamos los enlaces de las creadoras", "configurá la atribución de este lanzamiento". No usar para afirmar que se tiene acceso a analíticas, para crear seguimiento sin consentimiento o revisión de políticas, ni para decidir la estrategia de la campaña.
+license: MIT
 ---
 
-# UTM Campaign Plan
+# Plan de UTM de campaña
 
-Create a small, consistent link taxonomy that answers real reporting questions without turning every URL into ungoverned tracking noise.
+Crear una taxonomía de enlaces pequeña y consistente que responda preguntas reales de reporte, sin convertir cada URL en ruido de seguimiento sin gobierno.
 
-## 1. Start with the reporting question
+## 1. Empezar por la pregunta de reporte
 
-Ask what decision the data should support, which destinations are approved, which channels and partners are involved, what analytics system consumes the links, and what naming convention already exists. If no reporting owner or system is known, document that limitation before issuing links.
+Preguntar qué decisión debe respaldar el dato, qué destinos están aprobados, qué canales y socios participan, qué sistema de analíticas consume los enlaces y qué convención de nombres ya existe. Si no se conoce a la persona responsable del reporte ni el sistema, dejar asentada esa limitación antes de emitir enlaces.
 
-## 2. Define the controlled vocabulary
+## 2. Definir el vocabulario controlado
 
-Set clear allowed values for source, medium, campaign, content, and term only when each has a decision use. Use human-readable, stable naming. Separate owned social, paid social, creators, partners, and experiments so later reporting does not blend unlike traffic.
+Fijar valores permitidos para source, medium, campaign, content y term solo cuando cada uno sirva para una decisión. Usar nombres legibles y estables. Separar redes propias, redes pagas, creadoras, socios y experimentos, para que el reporte posterior no mezcle tráfico distinto.
 
-## 3. Issue a link register
+## 3. Emitir un registro de enlaces
 
-For every link, provide the destination, intended placement, UTM values, owner, start and end context, and approval status. Include examples and invalid examples. Reserve a process for changes so a creator or operator does not silently alter the taxonomy.
+Para cada enlace, indicar el destino, la ubicación prevista, los valores UTM, la persona responsable, el contexto de inicio y fin, y el estado de aprobación. Incluir ejemplos válidos e inválidos. Reservar un proceso de cambios para que ninguna creadora ni operadora altere la taxonomía en silencio.
 
-## 4. Validate before use and review after
+## 4. Validar antes de usar y revisar después
 
-Check that URLs resolve to the approved destination, parameters are encoded correctly, and the same source is not represented by several names. After the campaign, compare link usage against the register and record any taxonomy correction for the next brief.
+Comprobar que las URL llevan al destino aprobado, que los parámetros están bien codificados y que una misma fuente no aparece con varios nombres. Al terminar la campaña, comparar el uso de los enlaces con el registro y anotar cualquier corrección de la taxonomía para el próximo brief.
 
-## Hard rules
+## Reglas duras
 
-- Do not create tracking links for unapproved destinations or campaigns.
-- Never put personal data, sensitive information, customer names, or private identifiers in UTM values.
-- Do not treat UTM tags as proof of conversion or causation.
-- Preserve existing analytics conventions unless an authorised owner approves a change.
-- Keep affiliate, paid, organic, creator, and partner traffic distinguishable.
+- No crear enlaces de seguimiento para destinos ni campañas sin aprobar.
+- Nunca poner datos personales, información sensible, nombres de clientes ni identificadores privados en los valores UTM.
+- No tomar los UTM como prueba de conversión ni de causalidad.
+- Conservar las convenciones de analíticas existentes salvo que una persona autorizada apruebe un cambio.
+- Mantener distinguibles el tráfico de afiliados, pago, orgánico, de creadoras y de socios.
 
-## Failure modes
+## Modos de falla
 
-| Failure | Do this instead |
+| Falla | Qué hacer en cambio |
 | --- | --- |
-| Every team member invents names | Publish one controlled vocabulary and a shared register. |
-| Parameters contain personal or sensitive data | Use a non-identifying campaign label and keep sensitive data out of URLs. |
-| A short link hides an unverified destination | Validate the final redirect and approved landing page before sharing. |
-| Reports blend creator and paid traffic | Assign separate medium/source values and preserve them in the register. |
-
-## Where it sits
-
-Use campaign-brief to establish the campaign and paid-social-brief or influencer-partnerships to identify placements. Use this skill before cross-platform-distribution goes live. Use social-analytics-report and launch-retrospective to interpret the resulting labelled traffic honestly.
+| Cada integrante del equipo inventa nombres | Publicar un solo vocabulario controlado y un registro compartido. |
+| Los parámetros llevan datos personales o sensibles | Usar una etiqueta de campaña que no identifique a nadie y mantener los datos sensibles fuera de las URL. |
+| Un enlace corto esconde un destino sin verificar | Validar la redirección final y la página de destino aprobada antes de compartirlo. |
+| Los reportes mezclan tráfico de creadoras y pago | Asignar valores distintos de medium y source y conservarlos en el registro. |

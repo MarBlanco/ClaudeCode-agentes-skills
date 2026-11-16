@@ -1,49 +1,38 @@
 ---
 name: b-roll-shot-list
 description: >
-  Turns a script into a shoot-ready shot list — every clip, angle and visual you need to film, in
-  order.
-  Use when the user says "what do I need to film", "shot list for this", "b-roll list", "how do I shoot this reel".
+  Convierte un guion en una lista de planos lista para filmar: cada toma, ángulo y recurso visual
+  que hace falta, en el orden en que conviene rodar.
+  Usar cuando la persona dice "qué tengo que filmar", "lista de planos para esto", "lista de b-roll", "cómo grabo este reel".
 user-invokable: true
-argument-hint: "[your script]"
+argument-hint: "[el guion]"
 license: MIT
-metadata:
-  author: Ootto
-  version: "1.0.0"
-  category: content
 ---
 
-# B-Roll & Shot List — everything you need to film, in shooting order
+# Lista de planos y b-roll: todo lo que hay que filmar, en orden de rodaje
 
-Turns a script into a shoot-ready shot list — every clip, angle and visual you need to film, in
-order.
+Convierte un guion en una lista de planos lista para filmar: cada toma, ángulo y recurso visual
+que hace falta, en el orden en que conviene rodar.
 
+## Cuándo usarla
+El guion está terminado y hay que saber exactamente qué filmar.
 
-## When to use
-The script is done and you need to know exactly what to film.
+## Qué hace falta
+El guion final.
 
-## What you'll need
-The final script.
-
-## Instructions
-Give Claude the input and run this.
+## Instrucciones
+Pasale el guion a Claude y ejecutá esto.
 
 ```
-You are my first AD. Script: [paste].
+Sos mi primer asistente de dirección. Guion: [pegar].
 
-1. SHOT LIST in FILMING order (not script order) — group by location and setup so I shoot everything in
-   one place before moving. Number them.
-2. PER SHOT: what's in frame, the angle, the duration to film, and THE LINE IT COVERS.
-3. NO ORPHANS: if a shot doesn't cover a line, cut it and say so.
-4. COVERAGE: mark which shots are essential vs nice-to-have, so I know what to drop when time runs out.
-5. STOCK FALLBACK: for anything I can't film, the exact search term to find it.
-6. KIT: what I actually need, in one short list.
+1. LISTA DE PLANOS en ORDEN DE FILMACIÓN (no en el orden del guion): agrupá por lugar y montaje
+   para rodar todo en un sitio antes de mudarme. Numerá los planos.
+2. POR PLANO: qué entra en cuadro, el ángulo, cuánto filmar y LA LÍNEA QUE CUBRE.
+3. SIN HUÉRFANOS: si un plano no cubre ninguna línea, sacalo y decime que lo sacaste.
+4. COBERTURA: marcá cuáles planos son esenciales y cuáles son un extra, para saber qué descartar si falta tiempo.
+5. PLAN B CON BANCO DE IMÁGENES: para lo que no pueda filmar, el término exacto de búsqueda para encontrarlo.
+6. EQUIPO: lo que realmente necesito, en una lista corta.
 ```
 
-**Honesty:** Every shot needs a job. Pretty footage with no line to cover is what makes reels drag.
-
-**Next:** [reel-builder](../reel-builder/SKILL.md)
-
----
-
-Built by **[Ootto](https://www.ootto.ai)** — the AI autopilot that connects your tools once and runs the busywork for you, automatically. [Book a demo →](https://www.ootto.ai)
+**Criterio:** cada plano tiene que tener una tarea. Las imágenes lindas que no cubren ninguna línea hacen que el reel se arrastre.

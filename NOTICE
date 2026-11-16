@@ -22,6 +22,6 @@ harness-content (plugins/harness-content)
 Skills de Instagram: Copyright (c) 2026 Jake Schincariol, MIT License (plugins/harness-content/LICENSE-instagram-agent-skill-mit.txt).
 Upstream: https://github.com/Jakeschincariol/instagram-agent-skill @ d03c56bb598be770c60b201f94237e5d1a4268a6. Incorporadas sin modificar.
 Skills de producción y medición: Copyright (c) 2026 Ootto, MIT License (plugins/harness-content/LICENSE-ootto-content-skills-mit.txt).
-Upstream: https://github.com/Ootto-AI/claude-content-skills @ 691875ac3eafaf84ec0bdb0283728c85d2cb3413 (6 skills). Incorporadas sin modificar.
+Upstream: https://github.com/Ootto-AI/claude-content-skills @ 691875ac3eafaf84ec0bdb0283728c85d2cb3413 (6 skills). Incorporadas traducidas al español, sin otros cambios de método.
 Skills de HyperFrames: Apache License 2.0, HeyGen (plugins/harness-content/LICENSE-hyperframes-apache-2.0.txt).
 Upstream: https://github.com/heygen-com/hyperframes @ 064c4365578e8e019b0180c74d0b3da49e9362d9 (v0.9.54), path skills/{hyperframes,hyperframes-cli,hyperframes-registry}. Incorporadas sin modificar.

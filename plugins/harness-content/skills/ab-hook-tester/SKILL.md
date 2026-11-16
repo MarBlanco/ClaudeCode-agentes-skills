@@ -1,53 +1,42 @@
 ---
 name: ab-hook-tester
 description: >
-  Generates two genuinely distinct hook variants for the same reel so you can post-test which
-  opening actually wins.
-  Use when the user says "give me two hooks to test", "A/B this hook", "which opening should I use", "hook variants".
+  Genera dos variantes de gancho realmente distintas para el mismo reel, para probar después
+  cuál apertura gana.
+  Usar cuando la persona dice "dame dos ganchos para probar", "prueba A/B de este gancho", "con qué apertura arranco", "variantes de gancho".
 user-invokable: true
-argument-hint: "[the reel idea or script]"
+argument-hint: "[la idea o el guion del reel]"
 license: MIT
-metadata:
-  author: Ootto
-  version: "1.0.0"
-  category: content
 ---
 
-# A/B Hook Tester — two hooks, one variable, a real answer
+# Prueba A/B de ganchos: dos ganchos, una variable, una respuesta real
 
-Generates two genuinely distinct hook variants for the same reel so you can post-test which
-opening actually wins.
+Genera dos variantes de gancho realmente distintas para el mismo reel, para probar después
+cuál apertura gana.
 
+## Cuándo usarla
+Tenés un reel y dos intuiciones sobre cómo abrirlo.
 
-## When to use
-You have a reel and two instincts about how to open it.
+## Qué hace falta
+El guion o la idea, y qué querés optimizar (retención, guardados, mensajes).
 
-## What you'll need
-The script or the idea, plus what you're optimising for (retention, saves, DMs).
-
-## Instructions
-Give Claude the input and run this.
+## Instrucciones
+Pasale el material a Claude y ejecutá esto.
 
 ```
-You are my hook tester. Reel: [paste script or idea]. I care most about: [retention/saves/DMs].
+Sos mi probador de ganchos. Reel: [pegar guion o idea]. Lo que más me importa: [retención/guardados/mensajes].
 
-Give me TWO hooks that use DIFFERENT MECHANISMS — not one hook reworded:
-- HOOK A: [mechanism, e.g. result-first] — the exact on-screen text + spoken line.
-- HOOK B: [a different mechanism, e.g. objection-first] — same.
+Dame DOS ganchos que usen MECANISMOS DISTINTOS, no el mismo gancho reescrito:
+- GANCHO A: [mecanismo, p. ej. resultado primero]: el texto exacto en pantalla y la frase hablada.
+- GANCHO B: [otro mecanismo, p. ej. objeción primero]: lo mismo.
 
-Then:
-1. HYPOTHESIS: what I learn if A wins, and what I learn if B wins.
-2. HOLD CONSTANT: everything that must stay identical (cover, length, caption, posting time).
-3. READ: which metric decides it, and at what point (3s retention, not likes).
-4. SAMPLE: roughly how many views before the result means anything.
+Después:
+1. HIPÓTESIS: qué aprendo si gana A y qué aprendo si gana B.
+2. LO QUE SE MANTIENE IGUAL: todo lo que tiene que ser idéntico (portada, duración, epígrafe, horario de publicación).
+3. LECTURA: qué métrica decide y en qué momento (retención a los 3 s, no los me gusta).
+4. MUESTRA: aproximadamente cuántas visualizaciones hacen falta para que el resultado signifique algo.
 
-If both hooks pull the same lever, say so and replace one.
+Si los dos ganchos tocan la misma palanca, decímelo y reemplazá uno.
 ```
 
-**Honesty:** One variable. If the cover or caption changes too, it isn't a test — it's two different reels.
-
-**Next:** [reel-scripter](../reel-scripter/SKILL.md) → [cover-thumbnail-brief](../cover-thumbnail-brief/SKILL.md)
-
----
-
-Built by **[Ootto](https://www.ootto.ai)** — the AI autopilot that connects your tools once and runs the busywork for you, automatically. [Book a demo →](https://www.ootto.ai)
+**Criterio:** una sola variable. Si también cambian la portada o el epígrafe, no es una prueba: son dos reels distintos.

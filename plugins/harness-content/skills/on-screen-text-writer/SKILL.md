@@ -1,47 +1,38 @@
 ---
 name: on-screen-text-writer
 description: >
-  Writes the tight caption-style overlays that keep silent viewers watching to the end.
-  Use when the user says "write the on-screen text", "captions for this reel", "text overlays", "what should appear on screen".
+  Escribe los textos breves en pantalla, estilo subtítulo, que mantienen mirando hasta el final a
+  quien ve el video sin sonido.
+  Usar cuando la persona dice "escribí el texto en pantalla", "subtítulos para este reel", "textos superpuestos", "qué tiene que aparecer en pantalla".
 user-invokable: true
-argument-hint: "[your script]"
+argument-hint: "[el guion]"
 license: MIT
-metadata:
-  author: Ootto
-  version: "1.0.0"
-  category: content
 ---
 
-# On-Screen Text Writer — for the 80% watching on mute
+# Texto en pantalla: para el 80 % que mira sin sonido
 
-Writes the tight caption-style overlays that keep silent viewers watching to the end.
+Escribe los textos breves en pantalla, estilo subtítulo, que mantienen mirando hasta el final a
+quien ve el video sin sonido.
 
+## Cuándo usarla
+La mayoría mira sin sonido. El texto tiene que sostener el reel solo.
 
-## When to use
-Most people watch on mute. The text has to carry the reel alone.
+## Qué hace falta
+El guion, con los momentos marcados si los tenés.
 
-## What you'll need
-Your script, with the beats marked if you have them.
-
-## Instructions
-Give Claude the input and run this.
+## Instrucciones
+Pasale el guion a Claude y ejecutá esto.
 
 ```
-You are my on-screen text writer. Script: [paste].
+Sos mi redactor de texto en pantalla. Guion: [pegar].
 
-1. ONE LINE PER BEAT: the headline of that beat, not a transcript. Short enough to read before the cut.
-2. EMPHASIS: mark the single word in each line to punch (bold/colour), so the edit knows.
-3. TIMING: tie each line to the spoken word it should appear on.
-4. MUTE PASS: list the lines in order on their own. Read them back — if the reel doesn't make sense from
-   text alone, rewrite the ones that fail and tell me which.
-5. LENGTH CHECK: flag any line over ~7 words.
+1. UNA LÍNEA POR MOMENTO: el titular de ese momento, no una transcripción. Tan corta que se lea antes del corte.
+2. ÉNFASIS: marcá la única palabra de cada línea que hay que resaltar (negrita o color), para que la edición lo sepa.
+3. TIEMPOS: atá cada línea a la palabra hablada en la que tiene que aparecer.
+4. PRUEBA SIN SONIDO: listá solo las líneas, en orden. Leélas de corrido: si el reel no se entiende solo con el texto,
+   reescribí las que fallan y decime cuáles.
+5. LARGO: señalá toda línea de más de ~7 palabras.
 ```
 
-**Honesty:** This is not your script written out. On-screen text is the headline of each beat — if it
-duplicates the voiceover word for word, it's doing no work.
-
-**Next:** [reel-builder](../reel-builder/SKILL.md)
-
----
-
-Built by **[Ootto](https://www.ootto.ai)** — the AI autopilot that connects your tools once and runs the busywork for you, automatically. [Book a demo →](https://www.ootto.ai)
+**Criterio:** no es el guion escrito de nuevo. El texto en pantalla es el titular de cada momento: si repite la voz en off
+palabra por palabra, no aporta nada.
