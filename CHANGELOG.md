@@ -1,5 +1,13 @@
 # Changelog
 
+## harness-content 0.2.0 — 2026-11-16 (6 skills de producción y medición)
+
+### Agregado
+- 6 skills de Ootto (MIT) en `harness-content`, sin modificar y con commit fijado: `b-roll-shot-list` (plano de cobertura en orden de filmación), `cover-thumbnail-brief`, `on-screen-text-writer`, `ab-hook-tester`, `content-pillar-builder`, `utm-campaign-plan`. Cubren huecos de `ig-*` (planificación del rodaje, portadas, texto para mute, pruebas A/B, medición con UTM) (ADR-022).
+
+### No incorporado
+- `content-factory`, `comment-responder` (publican y responden solos), `reel-builder` (render con créditos externos), `agent-reach` y el resto del paquete (solapa con `ig-*` y `harness-research`).
+
 ## harness-core 0.12.3 · harness-content 0.1.0 — 2026-11-15 (contenido de marketing y video)
 
 ### Agregado

@@ -1,7 +1,7 @@
 {
   "name": "harness-content",
-  "version": "0.1.0",
-  "description": "Contenido de marketing y video para apps y SaaS: 13 skills de Instagram (Reels con ganchos puntuados, epígrafes, carruseles, historias, comentarios, respuestas, mensajes, auditoría) y 3 de HyperFrames (HTML a video). Skills de terceros sin modificar (MIT y Apache-2.0).",
+  "version": "0.2.0",
+  "description": "Contenido de marketing y video para apps y SaaS: 13 skills de Instagram + 6 de producción y medición (plano de cobertura, portadas, texto en pantalla, pruebas A/B, pilares, UTM) (Reels con ganchos puntuados, epígrafes, carruseles, historias, comentarios, respuestas, mensajes, auditoría) y 3 de HyperFrames (HTML a video). Skills de terceros sin modificar (MIT y Apache-2.0).",
   "author": { "name": "Martin Blanco" },
   "keywords": ["harness", "content", "marketing", "instagram", "video", "hyperframes", "reels"]
 }

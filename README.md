@@ -59,7 +59,7 @@ flowchart TD
 | `prompt-enhancer` | user | Own Prompt Enhancer mod: an always-visible Enhance button that turns a short idea into a complete prompt with one Haiku call. Works in panels where the third-party enhancer below does not show its button (e.g. the VS Code panel) |
 | `cc-prompt-enhance-mod` | user | Third-party Prompt Enhancer by Yigit Budak ([upstream](https://github.com/yibudak/cc-prompt-enhance-mod), MIT), included **unmodified**: an Enhance button that uses Sonnet and the recent conversation to sharpen your draft; Revert undoes it. One Sonnet call per press (more tokens than a Haiku-only enhancer; not measured here) |
 | `harness-research` | user | Market and web research with explicit evidence classification; `market-researcher` agent |
-| `harness-content` | per project | Marketing content and video: 13 Instagram skills (Reels with scored hooks, captions, carousels, replies, DMs, audits; MIT) and 3 HyperFrames skills (HTML to video; Apache-2.0), vendored unmodified |
+| `harness-content` | per project | Marketing content and video: 13 Instagram skills, 6 production and measurement skills (shot lists, covers, on-screen text, A/B hooks, pillars, UTM) (Reels with scored hooks, captions, carousels, replies, DMs, audits; MIT) and 3 HyperFrames skills (HTML to video; Apache-2.0), vendored unmodified |
 
 ### Project profiles
 
